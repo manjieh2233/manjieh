@@ -1,0 +1,40 @@
+/* 32-mode-terang.css — perbaikan warna di MODE TERANG yang kurang/tidak terlihat. FILE BARU, dimuat paling akhir (index.php).
+   Hanya berlaku saat html.light-theme; mode gelap tidak tersentuh. Hasil pengecekan otomatis: kontras teks di tiap layar >= 3:1 (kecil >= 4.5:1 diusahakan). */
+
+/* kode akun (FF 101 / ML 45): kuning terang di atas putih hampir tak terlihat -> kuning tua */
+html.light-theme .kode-yellow-text { color: #a16207 !important; }
+
+/* teks pudar (text-white/xx jadi ungu gelap transparan) dinaikkan sedikit supaya terbaca di latar terang */
+html.light-theme .text-white\/25 { color: rgba(36,26,61,.5) !important; }
+html.light-theme .text-white\/30 { color: rgba(36,26,61,.54) !important; }
+html.light-theme .text-white\/35 { color: rgba(36,26,61,.58) !important; }
+html.light-theme .text-white\/40 { color: rgba(36,26,61,.62) !important; }
+html.light-theme .text-white\/45 { color: rgba(36,26,61,.66) !important; }
+html.light-theme .text-white\/50 { color: rgba(36,26,61,.68) !important; }
+html.light-theme .text-white\/55 { color: rgba(36,26,61,.72) !important; }
+html.light-theme .text-white\/60 { color: rgba(36,26,61,.74) !important; }
+html.light-theme .border-white\/10 { border-color: rgba(90,60,140,.2) !important; }
+
+/* lencana & teks berwarna */
+html.light-theme .bg-sky-500 { background-color: #0284c7 !important; }
+html.light-theme .text-green-400 { color: #15803d !important; }
+html.light-theme .text-red-400 { color: #b91c1c !important; }
+html.light-theme .text-pink-400, html.light-theme .text-pink-300 { color: #be185d !important; }
+html.light-theme .text-purple-300, html.light-theme .text-purple-400 { color: #6d28d9 !important; }
+
+/* tombol hijau (Beli Sekarang): putih di atas hijau terang kontrasnya rendah -> hijau lebih tua */
+html.light-theme .bg-green-500 { background-color: #15803d !important; }
+html.light-theme [style*="background:#22c55e"] { background: #15803d !important; }   /* tombol Beli Sekarang / Rental (warnanya dipasang inline) */
+
+/* tombol silang di kolom pencarian & kartu/ikon kecil lain */
+html.light-theme .st-fx { background: rgba(36,26,61,.12); color: #241a3d; }
+html.light-theme .st-sgwrap .chip, html.light-theme #sg-category-wrap .chip { color: #5b4a7a; }
+html.light-theme #sg-category-wrap .chip.active, html.light-theme .st-filter .chip.active { color: #fff; }
+
+/* footer toko di atas latar gradasi pink */
+html.light-theme #official-contact-footer p { color: rgba(36,26,61,.82) !important; }
+
+/* rak Rental */
+html.light-theme .rk-title { color: #241a3d; }
+html.light-theme .rk-b { background: rgba(36,26,61,.08); color: #241a3d; }
+html.light-theme .price-copy-link { background: rgba(36,26,61,.1); color: #3b2a63; }

@@ -1,0 +1,40 @@
+/* 23-stok-rapi.css — perapian tampilan Stok. FILE BARU, dimuat setelah 22-stok-tabs.css (index.php). */
+
+/* ---------- 1. tab game (Semua / Free Fire / Mobile Legends) = ukuran yang sama dengan tab Sold Out ---------- */
+.st-tabs { gap: .35rem; }
+.st-tabs .st-tab { gap: .5rem; padding: .65rem 1rem; font-size: 14px; }
+.st-tabs .gt-dot { width: 22px; height: 22px; }
+
+/* ---------- 2. kolom pencarian lebih kecil ---------- */
+.st-top { margin-top: 10px; }
+.st-find { gap: 6px; padding: 0 4px 0 12px; border-radius: 12px; }
+.st-find svg { width: 16px; height: 16px; }
+.st-find input { height: 38px; }   /* font tetap 16px: kalau lebih kecil, iPhone otomatis zoom saat kolom diketuk */
+.st-fx { width: 24px; height: 24px; font-size: 11px; }
+
+/* ---------- 3. jumlah hasil + tombol Filter lebih kecil ---------- */
+.st-meta { margin-top: 8px; }
+.st-count { font-size: 11.5px; }
+.st-filterbtn { gap: 5px; padding: 6px 11px; font-size: 12px; }
+.st-filterbtn svg { width: 13px; height: 13px; }
+.st-fbadge { min-width: 15px; height: 15px; padding: 0 4px; font-size: 9.5px; }
+
+/* ---------- 4. jarak di atas tab Stok / Rental dirapatkan ---------- */
+#story-highlights { padding-bottom: 0 !important; }
+#main-tabs { margin-top: 2px !important; }
+#main-tabs .tab { padding-top: .6rem; padding-bottom: .6rem; }
+
+/* ---------- loading: filter disembunyikan + kerangka kartu sampai data masuk ---------- */
+html.tk-boot .tk-wait { visibility: hidden; }
+html.tk-boot #stok-posts:empty { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+html.tk-boot #stok-posts:empty::before, html.tk-boot #stok-posts:empty::after { content: ""; aspect-ratio: 3 / 4; border-radius: 14px; background: rgba(255,255,255,.07); animation: tkshim 1.3s ease-in-out infinite; }
+@keyframes tkshim { 50% { opacity: .45; } }
+@media (min-width: 700px) { html.tk-boot #stok-posts:empty { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ---------- tab game di HP: lebih besar; tab Roblox boleh terpotong setengah di kanan (tinggal digeser) ---------- */
+.st-lb { white-space: nowrap; }
+@media (max-width: 600px) {
+  .st-tabs, #stok-soldout-tabs { gap: 0 !important; overflow-x: auto; justify-content: flex-start; }
+  .st-tabs .st-tab, #stok-soldout-tabs .st-tab, #stok-soldout-tabs .sold-tab { flex: 0 0 auto !important; gap: .4rem !important; padding: .65rem .5rem !important; font-size: 14.5px !important; }
+  .st-tabs .gt-dot, #stok-soldout-tabs .gt-dot { width: 24px !important; height: 24px !important; flex: none; }
+}

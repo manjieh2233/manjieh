@@ -1,0 +1,100 @@
+/* 22-stok-tabs.css — gaya untuk 22-stok-tabs.js (tab game, chip kecil, tombol urutan, pencarian). FILE BARU. */
+
+/* ---------- tab game: Semua / Free Fire / Mobile Legends (gaya sama dengan tab Sold Out) ---------- */
+.st-tabs { display: flex; gap: .35rem; margin-top: 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,.1); flex-shrink: 0; }
+.st-tabs::-webkit-scrollbar { display: none; }
+.st-tab { position: relative; flex: none; display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1rem; border: 0; background: none; cursor: pointer; font-weight: 700; font-size: 14px; line-height: 1; font-family: inherit; color: rgba(255,255,255,.55); white-space: nowrap; border-radius: 12px 12px 0 0; transition: color .15s, background .15s; }
+.st-tab.on { color: #ddd0ff; background: rgba(124,58,237,.16); }
+.st-tab.ml.on { color: #ffd6ea; background: rgba(236,72,153,.16); }
+.st-tab::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px; background: transparent; }
+.st-tab.on::after { background: #8b5cf6; }
+.st-tab.ml.on::after { background: #ec4899; }
+.gt-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(168,85,247,.22); color: #c4b0ff; font-size: 8.5px; font-weight: 800; letter-spacing: .02em; }
+.gt-dot svg { width: 13px; height: 13px; }
+.gt-dot.ml { background: rgba(236,72,153,.22); color: #f9a8d4; }
+.gt-dot.ff:not(.has-img)::before { content: 'FF'; }
+.gt-dot.ml:not(.has-img)::before { content: 'ML'; }
+.gt-dot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gt-dot.has-img { background: none; }
+
+/* HP sempit: ketiga tab (Semua / Free Fire / Mobile Legends) dibuat muat tanpa digeser */
+@media (max-width: 370px) { .st-tab { padding: .65rem .5rem; font-size: 12.5px; } }
+@media (max-width: 430px) { .st-tab { padding: .65rem .65rem; gap: .35rem; font-size: 13px; } .st-tabs { gap: .15rem; } .gt-dot { width: 20px; height: 20px; } }
+
+/* ---------- chip lebih kecil ---------- */
+#tags-wrap { margin-top: 0 !important; }
+#tags-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+#tags-wrap .chip-row { justify-content: flex-start !important; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; margin: 0 !important; }
+/* SEMUA chip di lembar Filter (Urutkan, Kategori, Kategori SG) satu ukuran: tinggi, huruf, lengkung, ikon */
+#tags-wrap .chip-row > button.chip { flex: 0 0 auto; padding: 7px 13px !important; font-size: 12.5px !important; line-height: 1.2; gap: 6px !important; border-radius: 999px !important; }
+#tags-wrap .chip span[style*="width:16px"] { width: 15px !important; height: 15px !important; }
+#tags-wrap .chip svg { width: 10px !important; height: 10px !important; }
+#sort-wrap { justify-content: flex-start !important; }
+#sort-wrap { margin-top: 8px !important; }
+#sort-wrap:not(:has(#sg-category-toggle-btn:not(.hidden))) { display: none !important; }   /* baris lama disembunyikan, kecuali ada tombol Kategori SG */
+#sg-category-toggle-btn { padding: 7px 13px !important; font-size: 12.5px !important; line-height: 1.2; gap: 6px !important; }
+
+/* ---------- kolom pencarian, jumlah hasil, tombol Filter ---------- */
+.st-top { margin-top: 12px; }
+.st-find { display: flex; align-items: center; gap: 8px; padding: 0 6px 0 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.55); }
+.st-find:focus-within { border-color: #8b5cf6; }
+.st-find svg { width: 18px; height: 18px; flex: none; }
+.st-find input { flex: 1; min-width: 0; height: 46px; border: 0; outline: 0; background: none; color: #fff; font-weight: 500; font-size: 16px; line-height: 1; font-family: inherit; }   /* 16px: kalau lebih kecil, iPhone otomatis memperbesar halaman saat kolom diketuk */
+.st-find input::placeholder { color: rgba(255,255,255,.45); }
+.st-find input::-webkit-search-cancel-button { display: none; }
+.st-fx { width: 28px; height: 28px; flex: none; border: 0; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; font-size: 12px; }
+.st-fx[hidden] { display: none; }
+.st-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.st-count { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.55); }
+.st-filterbtn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e6defa; font-weight: 600; font-size: 13px; line-height: 1; font-family: inherit; cursor: pointer; }
+.st-filterbtn svg { width: 15px; height: 15px; }
+.st-fbadge { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: #8b5cf6; color: #fff; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+.st-fbadge[hidden] { display: none; }
+.st-mdot { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: #a855f7; }
+.st-mdot[hidden] { display: none; }
+
+/* ---------- lembar Filter ---------- */
+.st-filter { position: fixed; inset: 0; z-index: 45; display: flex; align-items: flex-end; justify-content: center; }
+.st-filter[hidden] { display: none; }
+.st-fbg { position: absolute; inset: 0; background: rgba(5,2,12,.6); }
+.st-fpanel { position: relative; width: 100%; max-width: 30rem; max-height: 85vh; max-height: 85dvh; display: flex; flex-direction: column; background: #1c142d; color: #f3eefe; border: 1px solid rgba(255,255,255,.14); border-radius: 22px 22px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.45); }
+@media (min-width: 640px) { .st-filter { align-items: center; } .st-fpanel { border-radius: 22px; } }
+.st-fhead { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 6px; font-size: 16px; }
+.st-fx2 { width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(255,255,255,.08); color: inherit; cursor: pointer; font-size: 13px; }
+.st-fbody { padding: 4px 18px 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.st-fsec { margin-top: 14px; }
+.st-flabel { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.45); margin-bottom: 8px; }
+.st-fsorts { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-sp { padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(28,20,45,.6); color: #d9d0f2; font-weight: 600; font-size: 12.5px; line-height: 1.2; font-family: inherit; cursor: pointer; }
+.st-sp.on { border-color: #a855f7; color: #fff; background: rgba(168,85,247,.28); }
+.st-ffoot { display: flex; gap: 10px; padding: 12px 18px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(255,255,255,.08); }
+.st-freset { flex: 0 0 auto; min-width: 88px; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.st-fdone { flex: 1; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* ---------- kunci zoom halaman (zoom foto di detail postingan tetap jalan, itu buatan sendiri lewat JS) ---------- */
+html, body { touch-action: pan-x pan-y; }
+
+html.light-theme .st-tab { color: rgba(29,21,51,.55); }
+html.light-theme .st-tab.on { color: #5b21b6; }
+html.light-theme .st-tab.ml.on { color: #be185d; }
+html.light-theme .st-tabs { border-bottom-color: rgba(0,0,0,.12); }
+html.light-theme .st-find { background: #fff; border-color: rgba(0,0,0,.14); color: rgba(29,21,51,.55); }
+html.light-theme .st-find input { color: #241a3d; }
+html.light-theme .st-find input::placeholder { color: rgba(29,21,51,.45); }
+html.light-theme .st-count { color: rgba(29,21,51,.6); }
+html.light-theme .st-filterbtn { background: #fff; color: #333; border-color: rgba(0,0,0,.18); }
+html.light-theme .st-fpanel { background: #fff; color: #241a3d; border-color: rgba(90,60,140,.2); }
+html.light-theme .st-ffoot { border-top-color: rgba(90,60,140,.14); }
+html.light-theme .st-flabel { color: rgba(29,21,51,.5); }
+html.light-theme .st-sp { background: #fff; color: #333; border-color: rgba(0,0,0,.18); }
+html.light-theme .st-sp.on { color: #4c1d95; }
+
+/* ---------- Kategori SG di lembar Filter ---------- */
+.st-sgwrap { margin: 0 0 8px; }
+.st-sgwrap.hidden { display: none; }
+.st-sgwrap .st-sgrow { justify-content: flex-start; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+#sg-category-wrap .chip-row > button.chip { flex: 0 0 auto; padding: 7px 13px !important; font-size: 12.5px !important; line-height: 1.2; gap: 6px !important; border-radius: 999px !important; }
+#sg-category-wrap .chip span[style*="width:16px"] { width: 15px !important; height: 15px !important; }
+#sg-category-wrap .chip svg { width: 10px !important; height: 10px !important; }
+#st-fsg #sort-wrap { margin-top: 0 !important; justify-content: flex-start !important; }
+#modal-sg .sg-pop-b .chip { padding: 7px 13px !important; font-size: 12.5px !important; line-height: 1.2; }   /* chip di kotak "Kategori SG lainnya" sama ukurannya */

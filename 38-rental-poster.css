@@ -1,0 +1,70 @@
+/* 38-rental-poster.css — tampilan poster Rental (dipasangkan dengan 38-rental-poster.js). Murni tambahan. */
+
+/* ---- rak per paket harga ---- */
+.rk-cell { flex-basis: clamp(150px, 42%, 220px); }
+.rk-shelf { margin-top: 22px; }
+.rk-title { display: inline-flex; align-items: center; background: linear-gradient(90deg, #fff, #d8b4fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rk-title::before { content: ""; width: 4px; height: .9em; margin-right: 8px; border-radius: 3px; background: linear-gradient(#c084fc, #7c3aed); }
+.rk-n { padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,.16); border: 1px solid rgba(168,85,247,.3); color: #e9d5ff; }
+html.light-theme .rk-title { background: linear-gradient(90deg, #1d1533, #6d28d9); -webkit-background-clip: text; background-clip: text; }
+html.light-theme .rk-n { color: #5b21b6; }
+
+/* ---- kartu poster ---- */
+.rp-card { border-radius: 14px; border: 1px solid rgba(168,85,247,.3); background: linear-gradient(180deg, rgba(40,22,78,.92), rgba(16,9,34,.96)); box-shadow: 0 6px 18px -8px rgba(124,58,237,.55); }
+.stock-card-ml.rp-card { border-color: rgba(244,114,182,.32); box-shadow: 0 6px 18px -8px rgba(236,72,153,.5); }
+.rp-card .stock-card-img { border-radius: 0; }
+.rp-text { padding: 8px 10px 10px; }
+.rp-name { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: rgba(255,255,255,.93); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-price { margin: 3px 0 0; font-size: 13.5px; font-weight: 800; color: #d8b4fe; }
+.rp-price span { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,.5); }
+.stock-card-ml .rp-price { color: #f9a8d4; }
+.rp-ready { position: absolute; left: 6px; bottom: 6px; z-index: 3; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px 2px 6px; border-radius: 999px; font-size: 8.5px; font-weight: 800; letter-spacing: .06em; color: #bbf7d0; background: rgba(5,30,16,.66); border: 1px solid rgba(74,222,128,.45); }
+.rp-ready i { width: 5px; height: 5px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+html.light-theme .rp-card { background: #fff; border-color: rgba(124,58,237,.25); }
+html.light-theme .rp-name { color: #1d1533; }
+html.light-theme .rp-price { color: #6d28d9; }
+html.light-theme .rp-price span { color: rgba(29,21,51,.55); }
+
+/* ---- foto yang rasionya beda dari poster: tampil utuh ---- */
+.rp-fit { position: relative; overflow: hidden; background: #0b0615; }
+.rp-fit > img { position: relative; z-index: 1; object-fit: contain !important; }
+.rp-fit > :not(img) { z-index: 3; }
+.rp-fit::before { content: ""; position: absolute; inset: -16px; background: var(--rp-bg) center / cover no-repeat; filter: blur(18px) brightness(.55) saturate(1.15); }
+
+/* ---- pilihan durasi di detail: 3 pilihan sebaris (kecil), custom di bawahnya ---- */
+.rp-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px !important; }
+.rp-opts > * { margin: 0 !important; min-width: 0; }
+.rp-opts > button { position: relative; flex-direction: column; align-items: stretch !important; justify-content: space-between !important; gap: 3px; padding: 8px 8px 8px 9px !important; min-height: 56px; text-align: left; }
+.rp-opts > button > span:first-child { display: block !important; min-width: 0; }
+.rp-opts > button > span:first-child > span:first-child { position: absolute; top: 7px; right: 7px; width: 12px !important; height: 12px !important; }
+.rp-opts > button > span:first-child > span:first-child svg { width: 8px; height: 8px; }
+.rp-opts > button > span:first-child > span:last-child { display: block; min-width: 0; }
+.rp-opts > button > span:first-child > span:last-child > span:first-child { font-size: 10.5px !important; line-height: 1.2; padding-right: 14px; display: block; letter-spacing: .01em; }
+.rp-opts > button > span:first-child > span:last-child > span:not(:first-child) { display: block; font-size: 8.5px !important; line-height: 1.25; margin-top: 2px; }
+.rp-opts > button [class*="bg-green-500/15"], .rp-opts > button [class*="bg-emerald-500/15"] { position: absolute; top: -7px; left: 8px; font-size: 8px !important; padding: 1px 6px !important; background: #0f3d22 !important; border: 1px solid rgba(74,222,128,.45); }
+.rp-opts > button > span:last-child { font-size: 13px !important; line-height: 1.1; padding: 0 !important; align-self: flex-start; }
+.rp-opts > div:last-child { grid-column: 1 / -1; padding: 7px 11px !important; }
+.rp-opts > div:last-child > p { display: none; }
+.rp-ff > [class*="border-pink-400"] { border-color: #a855f7 !important; background: rgba(168,85,247,.18) !important; box-shadow: 0 0 0 1px #a855f7 inset; }
+.rp-ff [class*="bg-pink-500"] { background: #a855f7 !important; border-color: #a855f7 !important; }
+.rp-hint { margin-top: 8px; padding: 8px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; color: #bbf7d0; background: rgba(22,163,74,.12); border: 1px solid rgba(74,222,128,.35); }
+.rp-hint b { color: #fff; }
+html.light-theme .rp-hint { color: #166534; }
+html.light-theme .rp-hint b { color: #14532d; }
+
+
+/* ---- kartu: baris kode "RENTAL | P1" ---- */
+.rp-meta { margin: 0 0 3px; display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.rp-meta i { font-style: normal; opacity: .5; }
+.rp-meta b { font-size: 10px; letter-spacing: .04em; }
+html.light-theme .rp-meta { color: rgba(29,21,51,.55); }
+
+/* ---- detail rental: Bagikan / Suka / jumlah disukai disembunyikan (wishlist tetap di foto) ---- */
+.rp-hide { display: none !important; }
+
+
+
+
+/* di rak (geser samping): kartu ditekan membesar sedikit, ada ruang supaya tidak kepotong */
+.rk-row { padding-top: 14px; padding-bottom: 14px; margin-top: -6px; margin-bottom: -8px; }
+.rk-row .stock-card.is-pressed { transform: scale(1.05) !important; }

@@ -1,0 +1,39 @@
+  @media (prefers-reduced-motion: reduce) {
+    .bg-glow span, .bg-particles i, .btn-attract, .btn-attract::after, .anim-in, .panel-fade, .detail-content-in, .detail-frame-in, header img#p-logo, h1, #p-subtitle, #p-subtitle2, .modal-overlay.flex, .modal-overlay.flex > div:first-child, #modal-detail.flex > div:first-child, .badge-pop, .tab-icon-tap, .sort-opt-pop, .stok-info-marquee-track, #toast:not(.hidden) { animation: none !important; }
+    .bg-particles { display:none !important; }
+    button, .tab, .chip, .game, a { transition: none !important; }
+    nav a.card, nav a.card svg, #p-logo-btn, header h1, header p:last-child, #banner-wrap, .tab, #game-toggle-wrap .game, .skeleton-fade, .segwrap .seg-indicator { animation: none !important; opacity:1 !important; }
+    .scroll-reveal { transition: none !important; opacity:1 !important; transform:none !important; }
+    /* FIX (potensi patah/fps drop di HP low-end, KHUSUSNYA pas lagi geser foto -- backdrop-filter
+       blur itu operasi GPU yang berat, apalagi kalau dirender TERUS-MENERUS di ATAS elemen yang
+       lagi digeser kayak .slideshow-topbar): blur-nya dimatiin & diganti background lebih pekat
+       (tanpa blur) biar tetep kebaca tapi gak makan render tiap frame. */
+    .modal-overlay, .slideshow-topbar, .quick-preview-inner, #fitur-blur { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .modal-overlay { background: rgba(10,6,18,.92) !important; }
+    .slideshow-topbar { background: rgba(0,0,0,.72) !important; }
+  }
+  /* Sama persis kayak blok prefers-reduced-motion di atas, tapi dipicu lewat class
+     "reduce-anim" yang ditambahin JS pas kedeteksi device RAM kecil/koneksi lambat (lihat
+     script di awal <body>) -- bukan dari setting aksesibilitas HP. */
+  body.reduce-anim .bg-glow span, body.reduce-anim .bg-particles i, body.reduce-anim .btn-attract, body.reduce-anim .btn-attract::after, body.reduce-anim .anim-in, body.reduce-anim .panel-fade, body.reduce-anim .detail-content-in, body.reduce-anim .detail-frame-in, body.reduce-anim header img#p-logo, body.reduce-anim h1, body.reduce-anim #p-subtitle, body.reduce-anim #p-subtitle2, body.reduce-anim .modal-overlay.flex, body.reduce-anim .modal-overlay.flex > div:first-child, body.reduce-anim #modal-detail.flex > div:first-child, body.reduce-anim .badge-pop, body.reduce-anim .tab-icon-tap, body.reduce-anim .sort-opt-pop, body.reduce-anim .stok-info-marquee-track, body.reduce-anim #toast:not(.hidden) { animation: none !important; }
+  body.reduce-anim .bg-particles { display:none !important; }
+  body.reduce-anim button, body.reduce-anim .tab, body.reduce-anim .chip, body.reduce-anim .game, body.reduce-anim a { transition: none !important; }
+  body.reduce-anim nav a.card, body.reduce-anim nav a.card svg, body.reduce-anim #p-logo-btn, body.reduce-anim header h1, body.reduce-anim header p:last-child, body.reduce-anim #banner-wrap, body.reduce-anim .tab, body.reduce-anim #game-toggle-wrap .game, body.reduce-anim .skeleton-fade, body.reduce-anim .segwrap .seg-indicator { animation: none !important; opacity:1 !important; }
+  body.reduce-anim .scroll-reveal { transition: none !important; opacity:1 !important; transform:none !important; }
+  /* Sama kayak fix backdrop-filter di blok prefers-reduced-motion di atas, versi buat class
+     "reduce-anim" (device RAM kecil/koneksi lambat yang kedeteksi otomatis via JS). */
+  body.reduce-anim .modal-overlay, body.reduce-anim .slideshow-topbar, body.reduce-anim .quick-preview-inner, body.reduce-anim #fitur-blur { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  body.reduce-anim .modal-overlay { background: rgba(10,6,18,.92) !important; }
+  /* FIX PERFORMA SCROLL (biar mulus/gak ngelag pas scroll nyari stok): kartu produk (.card) itu
+     background-nya TRANSPARAN (rgba .6) di atas .bg-glow -- 3 lingkaran blur besar (filter:blur
+     70px) yang position:fixed & animasi terus-menerus DI BELAKANG seluruh halaman, plus partikel
+     yang juga infinite. Karena transparan, browser TERPAKSA nge-blend ulang kartu yang lagi
+     digeser dengan background blur yang lagi bergerak DI TIAP FRAME scroll -- ini beban GPU
+     paling berat di seluruh halaman, kerasa banget di HP low/mid-end pas scroll cepat nyari stok.
+     Solusinya: begitu user MULAI scroll, animasi blob & partikel di-"pause" sebentar (JS nambahin
+     class body.is-scrolling, lihat listener scroll yang sudah ada) -- background jadi diem/statis
+     sesaat, browser gak perlu itung ulang blend-nya tiap frame scroll, jadi scroll-nya mulus.
+     Begitu user berhenti scroll (~160ms), animasinya lanjut normal lagi otomatis -- gak kelihatan
+     "patah" krn cuma di-pause pas paling dibutuhkan (lagi digeser cepat). */
+  body.is-scrolling .bg-glow span, body.is-scrolling .bg-particles i { animation-play-state: paused !important; }
+  body.reduce-anim .slideshow-topbar { background: rgba(0,0,0,.72) !important; }

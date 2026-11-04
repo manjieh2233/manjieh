@@ -1,0 +1,14 @@
+/* 27-scroll-mulus.css — pasangan 27-scroll-mulus.js */
+/* animasi latar dijeda selama scroll (kelas tk-scrolling dipasang oleh JS) */
+html.tk-scrolling .bg-glow span,
+html.tk-scrolling .bg-particles i { animation-play-state: paused !important; }
+
+/* Kartu yang di luar layar dilewati render-nya (content-visibility) memakai tinggi PERKIRAAN. Kalau perkiraan jauh dari tinggi asli,
+   halaman "meloncat" saat kartu muncul = scroll terasa tersendat. Tinggi asli kartu stok (diukur dengan data toko asli):
+   lebar kartu 177px -> ~318px, 277px -> ~450px, yaitu kira-kira 1,25 x lebar + 100px, dan lebar kartu ikut lebar layar. */
+#stok-posts .grid > .post-wrap, #stok-soldout .grid > .post-wrap { contain-intrinsic-size: auto calc(56vw + 100px); }
+#rental-available .grid > .post-wrap, #rental-soldout .grid > .post-wrap { contain-intrinsic-size: auto 270px; }
+@media (min-width: 640px) {
+  #stok-posts .grid > .post-wrap, #stok-soldout .grid > .post-wrap { contain-intrinsic-size: auto calc(29.4vw + 91px); }
+  #rental-available .grid > .post-wrap, #rental-soldout .grid > .post-wrap { contain-intrinsic-size: auto 330px; }
+}

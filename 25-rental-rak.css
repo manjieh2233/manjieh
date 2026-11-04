@@ -1,0 +1,28 @@
+/* 25-rental-rak.css — Rental per paket harga: rak yang bisa digeser kanan-kiri (dipasangkan dengan 25-rental-rak.js). */
+#rental-tags-wrap { display: none; }                       /* chip harga lama diganti rak */
+
+.rk-shelf { margin-top: 16px; }
+.rk-head { display: flex; align-items: baseline; gap: 5px; padding: 0 2px; }
+.rk-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; }
+.rk-n { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.5); }
+.rk-hint { display: none; align-items: center; gap: 4px; margin-left: auto; font-size: 11.5px; font-weight: 800; color: #c4a9ff; }
+.rk-hint svg { width: 14px; height: 14px; animation: rknudge 1.2s ease-in-out infinite; }
+@keyframes rknudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+.rk-more .rk-hint { display: inline-flex; }
+.rk-moved .rk-hint { display: none; }                      /* sudah digeser = pembeli sudah paham */
+.rk-nav { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .rk-more .rk-nav { display: inline-flex; gap: 4px; margin-left: 8px; }
+  .rk-b { width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+  .rk-b:hover { background: rgba(255,255,255,.2); }
+}
+
+.rk-row { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; padding: 8px 2px 6px; margin: 0 -2px; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none; scroll-padding: 0 2px; touch-action: pan-x pan-y; }
+.rk-row::-webkit-scrollbar { display: none; }
+.rk-more:not(.rk-end) .rk-row { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent); }   /* tepi kanan memudar = masih ada kartu */
+.rk-cell { flex: 0 0 clamp(150px, 44%, 210px); min-width: 0; scroll-snap-align: start; }
+.rk-row .stock-card { touch-action: auto !important; }      /* kartu lama memakai pan-y; di rak harus boleh digeser ke samping */
+
+html.light-theme .rk-n { color: rgba(29,21,51,.58); }
+html.light-theme .rk-hint { color: #6d28d9; }
+@media (prefers-reduced-motion: reduce) { .rk-hint svg { animation: none; } }

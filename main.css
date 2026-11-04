@@ -1,0 +1,772 @@
+  :root { color-scheme: dark;
+    /* Warna dasar (format "R,G,B") buat gradien kartu pas ditekan/di-zoom (foto & teks) --
+       dipakai bareng lewat rgba(var(--card-glow-rgb), alpha) di dua ::before di bawah, biar
+       admin bisa ganti satu warna ini aja (lewat color picker di menu Edit Profile ->
+       applyCardGlowColor()) dan otomatis kepakai di foto MAUPUN teks tanpa perlu ubah dua
+       tempat. Default: kuning keemasan (#facc15), sama kayak gradien swipe-hint yang udah ada. */
+    --card-glow-rgb: 250,204,21;
+  }
+  html, body { background:#0f0a1a; color:#f4f1ff; font-family: 'Baloo 2', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; overflow-x:hidden; max-width:100vw; overscroll-behavior-x:none; }
+  /* Font harga: dipakai konsisten di semua tampilan harga/flash-sale (bulat & tebal). */
+  .price-font { font-family: 'Baloo 2', ui-sans-serif, system-ui, sans-serif; font-weight: 700; }
+  /* Font khusus baris info "Allref Bergaransi / Open Cicil / Open Tukar Tambah" di bawah kotak
+     harga -- SENGAJA bukan Baloo 2 (font default web ini), tapi Poppins, niru gaya font di
+     foto referensi yang dikasih user (rounded-geometric, lebih rapi/netral). */
+  .stok-info-font { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; font-weight: 700; }
+  .primary-pink { background:#ec4899; color:#fff; }
+  .ring-primary { box-shadow: 0 0 0 2px rgba(168,85,247,.4); }
+  .card { background: rgba(28,20,45,.6); border:1px solid rgba(255,255,255,.14); }
+  /* Checkbox Terbaru/Termurah/Termahal: dulu pakai accent-color bawaan browser doang, dan
+     ternyata browser milih warna tanda centang beda-beda tergantung terang/gelapnya warna
+     kotaknya -- buat kotak UNGU (FF) browser milih tanda centang PUTIH (kontras bagus), tapi
+     buat kotak PINK (ML) browser malah milih tanda centang HITAM/gelap (nyaris gak keliatan
+     di atas pink). Makanya sekarang checkbox-nya digambar manual (appearance:none) supaya
+     tanda centangnya SELALU putih, apapun warna kotaknya (ungu di FF, pink di ML). Kotak yang
+     BELUM dicentang sengaja dibikin SATU warna abu-abu gelap tetap (gak ganti-ganti ikut tema
+     terang/gelap) -- persis kayak tampilan checkbox bawaan browser sebelumnya, biar gak ada
+     versi "pucat"/nyaris nempel ke background pas mode terang. */
+  .sort-check { -webkit-appearance:none; appearance:none; width:16px; height:16px; flex-shrink:0; border-radius:4px; border:1.5px solid rgba(255,255,255,.18); background:#3b3b3b; position:relative; cursor:pointer; transition:background-color .15s ease, border-color .15s ease; }
+  .sort-check:checked { background-color:#a855f7; border-color:#a855f7; }
+  .sort-check.accent-pink-themed:checked { background-color:#ec4899; border-color:#ec4899; }
+  .sort-check:checked::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  /* ---- Menu "Fitur": panel lebar yg turun dari atas, mirip referensi (venderpedia) ----
+     #fitur-backdrop: layer transparan full-screen, cuma buat nangkep klik di luar kotak
+     (biar bisa ditutup dgn tap di mana aja) -- gak ngasih efek visual apa-apa.
+     #fitur-blur: layer BLUR/gelap yang keliatan, tingginya di-set lewat JS (updateFiturBlurHeight)
+     supaya nutupin SELURUH layar yang lagi keliatan (setinggi viewport) -- sama kayak referensi,
+     biar konten di belakang menu (termasuk yang di bawah kotaknya) ikut blur/gelap semua. */
+  #bg-music-playlist-wrap { overscroll-behavior: contain; }
+  #admin-menu { opacity:0; transform: translateY(-12px); pointer-events:none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.85,.32,1); }
+  #fitur-backdrop { opacity:0; pointer-events:none; transition: opacity .22s ease; }
+  #fitur-blur { position:fixed; left:0; right:0; top:0; height:0; z-index:29; opacity:0; pointer-events:none; background:rgba(0,0,0,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: opacity .22s ease; }
+  #admin-corner.fitur-open #admin-menu { opacity:1; transform: translateY(0); pointer-events:auto; }
+  #admin-corner.fitur-open #fitur-backdrop { opacity:1; pointer-events:auto; }
+  #admin-corner.fitur-open #fitur-blur { opacity:1; }
+  /* Border lebih tebal khusus buat card akun di tabel stok/rental (bukan card lain kayak tombol nav/modal). */
+  .card.stock-card { border:1.2px solid rgba(255,255,255,.4); transition: border-color .2s ease, box-shadow .2s ease, transform .22s cubic-bezier(.22,.85,.32,1), opacity .2s ease; }
+  /* Efek pas kartu stok/rental ditekan/disentuh: dipicu lewat class .is-pressed dari JS
+     (bukan :active CSS doang) supaya konsisten kepencet di HP (touch) maupun mouse, dan
+     berlaku SAMA buat kartu stok & rental (dua-duanya sama-sama pake class .stock-card).
+     Efeknya: SELURUH ISI kartu (foto, judul, badge, harga, dst) ikut membesar BARENG karena
+     transform-nya nempel di bingkai kartu itu sendiri (bukan cuma fotonya doang yang di-zoom
+     lebih dalam lagi kayak versi lama) + nyala ungu di pinggirnya + durasinya dibikin santai/
+     kerasa (.22s, bukan buru-buru/instan). Kartu diperbesar (scale 1.14) + diangkat dikit
+     (translateY -4px) biar keliatan jelas "keluar"/pop-out dikit nutupin kartu tetangga -- tapi
+     SENGAJA gak digedein banget kayak versi lama (dulu 1.22) biar gak terlalu "berat"/nabrak
+     kartu tetangga & gak gampang kepotong sama wrapper. Arahnya selalu membesar, gak pernah
+     mengecil. */
+  .stock-card.is-pressed { border-color:#a855f7 !important; border-width:2.5px !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.18), 0 0 0 4px rgba(192,132,252,.75), 0 0 34px rgba(192,132,252,.85), 0 0 64px rgba(168,85,247,.55), 0 20px 38px rgba(0,0,0,.6); transform: scale(1.14) translateY(-4px); position: relative; z-index: 5; }
+  /* Khusus kartu ML: garis/glow-nya pink (bukan ungu) pas is-pressed. FF & Rental tetap
+     pakai warna ungu dari .stock-card.is-pressed di atas. Highlight glossy (inset putih tipis
+     di garis atas) dipertahankan sama, cuma warna glow-nya yang diganti pink. */
+  .stock-card-ml.is-pressed { border-color:#ec4899 !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.18), 0 0 0 4px rgba(244,114,182,.75), 0 0 34px rgba(244,114,182,.85), 0 0 64px rgba(236,72,153,.55), 0 20px 38px rgba(0,0,0,.6); }
+  .stock-card-img img.img-fade { transition: opacity .25s ease, transform .15s cubic-bezier(.22,.85,.32,1); }
+  /* Gradien gelap yang muncul NEMPEL DI FOTO doang (bukan di teks/badge di bawahnya) pas kartu
+     stok/rental lagi ditekan/di-zoom -- niru referensi video: pas ditekan, gradiennya "tumbuh"
+     dari KIRI ke KANAN (transform-origin: left, scaleX 0->1), dan pas dilepas dia "memudar"
+     baliknya dari KANAN ke KIRI (scaleX 1->0, tetep origin kiri jadi sisi kanannya yang narik
+     mundur duluan). Ditaruh sebagai ::before di .stock-card-img (yang udah overflow-hidden)
+     biar gradiennya kepotong rapi ngikutin bentuk foto yang rounded, gak nembus ke luar. */
+  .stock-card-img::before {
+    content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background: linear-gradient(90deg, rgba(0,0,0,.68) 0%, rgba(0,0,0,.32) 45%, transparent 78%);
+    transform-origin: left center; transform: scaleX(0); opacity:0;
+    transition: transform .38s cubic-bezier(.22,.85,.32,1), opacity .38s ease;
+  }
+  .stock-card.is-pressed .stock-card-img::before { transform: scaleX(1); opacity:1; }
+  /* Selain bingkai kartu yang membesar (lihat .stock-card.is-pressed di atas), FOTO di dalamnya
+     ikut di-zoom lebih dalam lagi (kayak kamera zoom-in ke fotonya) -- dua lapis zoom ini yang
+     bikin efeknya kerasa lebih "hidup" kayak di referensi, bukan cuma satu kotak polos membesar. */
+  .stock-card.is-pressed .stock-card-img img { transform: scale(1.1); }
+  /* Kilau emas sekilas nyapu dari kiri ke kanan pas kartu (stok MAUPUN rental) ditekan.
+     SENGAJA pakai class TERPISAH (.card-shine, dipasang/dicopot lewat JS di setPressedCard())
+     bukan digantung ke .is-pressed langsung -- soalnya .is-pressed suka kehapus DULUAN (180ms
+     abis dilepas, lihat releasePressedCard) sebelum animasi sapuan .5 detik ini sempet kelar,
+     jadi keliatan "berhenti di tengah jalan"/cuma nutupin separuh foto alih-alih nyapu penuh
+     sampe ujung. Class ini dibiarin nempel sampe animasinya beneran abis sendiri baru dicopot.
+     Ditaruh di dalam .stock-card-img (yang udah overflow-hidden buat motong foto rounded) biar
+     sapuannya rapi gak nembus keluar bingkai foto. Cuma background-position, sekali jalan .5
+     detik terus ilang -- ringan, gak bikin reflow/layout thrashing. */
+  .stock-card-img.card-shine::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 35%, rgba(var(--card-glow-rgb),.55) 50%, transparent 65%);
+    background-size: 220% 100%;
+    animation: cardShineSweep .5s ease-out both;
+  }
+  @keyframes cardShineSweep { from { background-position: 160% 0; } to { background-position: -60% 0; } }
+  /* Teks (badge/judul/harga) di BAWAH foto ikut kena lapis zoom sendiri juga, tapi SEDIKIT aja
+     (bukan sebesar foto) biar gak numpuk/ketutupan sama kartu tetangga. */
+  .stock-card-text { position:relative; transition: transform .15s cubic-bezier(.22,.85,.32,1); }
+  .stock-card.is-pressed .stock-card-text { transform: scale(1.03); }
+  /* Gradien KUNING nyala di bagian TEKS (badge/judul/harga di bawah foto) pas kartu ditekan/
+     di-zoom -- sama kayak swipe-hint pas kartu digeser (warna & arah sama, rgba(250,204,21,...)
+     dari kiri), tapi sekarang dipicu juga oleh .is-pressed (bukan cuma pas digeser doang).
+     Sama kayak gradien di foto (.stock-card-img::before di atas): tumbuh kiri->kanan pas
+     ditekan, memudar balik kanan->kiri pas dilepas (transform-origin: left, scaleX). Anak-anak
+     di dalam .stock-card-text (badge/judul/harga) otomatis kegambar DI ATAS ::before ini karena
+     posisinya normal-flow, jadi tetap kebaca gak ketutupan. */
+  .stock-card-text::before {
+    content:''; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+    background: linear-gradient(90deg, rgba(var(--card-glow-rgb),.85) 0%, rgba(var(--card-glow-rgb),.4) 40%, transparent 72%);
+    transform-origin: left center; transform: scaleX(0); opacity:0;
+    transition: transform .38s cubic-bezier(.22,.85,.32,1), opacity .38s ease;
+  }
+  .stock-card.is-pressed .stock-card-text::before { transform: scaleX(1); opacity:1; }
+  .stock-card-text > * { position:relative; z-index:1; }
+  /* Kartu sebelah yang lagi gak ditekan dikecilin DIKIT AJA (bukan drastis) biar kartu yang
+     ditekan tetap kerasa "membesar/keluar", bukan malah kesannya seluruh grid ikut menciut.
+     Pakai descendant selector (bukan direct child ">") karena .stock-card sekarang dibungkus
+     satu div lagi (post-wrap-<id>, buat lapisan swipe-to-wishlist), jadi bukan anak langsung
+     .grid lagi. */
+  .grid:has(.stock-card.is-pressed) .stock-card:not(.is-pressed) { transform: scale(0.97); opacity:.85; }
+  /* BUGFIX: pembungkus tiap kartu (.post-wrap, id="post-wrap-<id>") sengaja overflow:hidden
+     (biar lapisan swipe-to-wishlist di baliknya kepotong rapi ngikutin sudut rounded). Masalahnya,
+     kartu di dalamnya membesar (scale 1.14 + naik dikit) pas is-pressed, dan sisi kanan/bawahnya
+     itu KEPOTONG sama overflow:hidden si pembungkus -- makanya kerasa "cuma sebagian doang yang
+     ke-zoom" (atas keliatan, kanan/bawah ketutupan/rata). Fix: begitu ada kartu di dalam wrapper
+     yang lagi is-pressed, wrapper-nya dibikin overflow:visible SEMENTARA (otomatis balik
+     overflow:hidden lagi pas dilepas) -- jadi pop-out-nya kepotong tinggal salah satu sisi doang. */
+  .post-wrap:has(.stock-card.is-pressed) { overflow: visible; }
+  /* Popup preview cepat (long-press, lihat showQuickPreview) numpuk di ATAS badge/judul/harga
+     kartu -- teks & gradien kuning di baliknya masih keliatan "mentah" nyempil di pinggir popup.
+     Diblur dikit + gradien kuningnya diredupin pas popup lagi nongol biar fokus mata ke popup-nya
+     aja, bukan ke teks yang ketutupan sebagian di belakangnya. */
+  .post-wrap:has(.quick-preview-popup.show) .stock-card-text { filter: blur(3px); transition: filter .18s ease; }
+  .post-wrap:has(.quick-preview-popup.show) .stock-card-text::before { opacity: .35 !important; }
+
+  /* Versi generik dari efek zoom ungu di atas, dipakai di elemen lain di luar kartu
+     stok/rental yang juga mau efek serupa pas ditekan/disentuh: tombol nav (WA/Saluran/dll),
+     tombol Suka/Bagikan/Hubungi Admin di detail postingan, dan chip kategori di tab Rental.
+     Tinggal tambahin class "press-glow" ke elemennya, class "is-pressed"-nya otomatis
+     dipasang/dilepas lewat JS yang sama kayak .stock-card (lihat listener pointerdown di bawah).
+     Sengaja dibikin SEDIKIT aja (bukan gede kayak kartu stok) + gak pake glow blur -- biar gak
+     "keluar" dari kotak tombolnya sendiri, cukup ungu polos + membesar tipis buat feedback. */
+  .press-glow { transition: transform .2s cubic-bezier(.22,.85,.32,1), border-color .2s ease; border-radius:8px; }
+  .press-glow.is-pressed { border-color:#a855f7 !important; border-width:2px !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.18); transform: scale(1.04); position: relative; z-index: 5; }
+  /* Tombol baris nav (WA Jual/Beli, WA Rekber, Saluran Stok, Saluran Rental, Topup) kerasa
+     "datar" kalau cuma pakai .press-glow standar di atas -- apalagi tombol-tombol ini bikin
+     pindah aplikasi (WA)/tab baru, jadi kepencetnya cuma sekilas banget sebelum layar
+     berpindah. Dikasih efek lebih kerasa di sini: background ikut nge-flash ungu + membesar
+     dikit lebih jauh dari .press-glow biasa -- tetap pakai transform/background-color doang
+     (bukan box-shadow blur gede), jadi ringan buat GPU/CPU.  */
+  nav a.press-glow.is-pressed { background: rgba(168,85,247,.16) !important; transform: scale(1.07); }
+  nav a.press-glow.is-pressed svg { transform: scale(1.15); transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+  /* Ikon-ikon di menu "Fitur" (Home, Login Admin, Edit Profile, dst) -- disamain semua ukuran
+     & ketebalan garisnya di sini, biar rapi & konsisten kayak referensi (venderpedia), gak
+     lagi campur-campur emoji/simbol yang beda gaya & ukuran tiap browser/HP. */
+  .menu-ico { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; color:#bcb2d9; }
+  .menu-ico svg { width:19px; height:19px; display:block; }
+  #menu-logout .menu-ico { color:#f87171; }
+  .chip { border:1px solid rgba(255,255,255,.1); background: rgba(28,20,45,.6); color:#bcb2d9; }
+  /* Baris kategori/chip: 3 per baris. Karena pakai flex-wrap + justify-content:center,
+     kalau baris terakhir cuma sisa 1 atau 2 chip, otomatis nge-center di tengah (bukan
+     nempel/numpuk ke kiri) -- gak perlu itung sisa manual di JS. */
+  .chip-row { display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; }
+  .chip-row > button { flex: 0 1 calc(33.333% - 0.3334rem); min-width:0; }
+  .chip.active { background:#a855f7; color:#fff; border-color:#a855f7; }
+  .chip.active-pink { background:#ec4899; color:#fff; border-color:#ec4899; }
+  .chip.danger.active { background:#ef4444; border-color:#ef4444; color:#fff; }
+  .chip.discount { border-color: rgba(249,115,22,.4); color:#fdba74; }
+  .chip.discount.active { background:#f97316; border-color:#f97316; color:#fff; }
+  /* Gambar fade-in halus pas selesai loading, biar transisi ganti kategori/geser slide
+     kerasa smooth (bukan tiba-tiba "nge-pop" muncul). Opacity akhir diatur lewat inline
+     style pas onload supaya gak bentrok sama class peredup (opacity-50) buat sold out. */
+  .img-fade { opacity: 0; transition: opacity .25s ease; }
+  .input { background: rgba(15,10,26,.8); border:1px solid rgba(255,255,255,.12); color:#f4f1ff; }
+  .input:focus { outline:none; border-color:#a855f7; }
+  .btn-ghost { border:1px solid rgba(255,255,255,.14); color:#f4f1ff; }
+  .like-btn.is-liked { border-color:rgba(239,68,68,.5); color:#ef4444; background:rgba(239,68,68,.1); }
+  /* BUG FIX: tanpa baris ini, di light-theme aturan "html.light-theme .btn-ghost" (yang nyetel
+     warna gelap) menang lawan ".like-btn.is-liked" di atas -- soalnya sama-sama 2 class, tapi
+     yang itu ada tambahan selector elemen "html" yang bikin spesifisitasnya sedikit lebih tinggi.
+     Akibatnya ikon like (pakai fill/stroke currentColor) malah keliatan gelap/hitam, bukan merah. */
+  html.light-theme .like-btn.is-liked { color:#ef4444; }
+  /* Animasi "pop" pas tombol Suka diklik jadi Disukai — membesar dikit terus balik normal. */
+  @keyframes likePop { 0%{ transform:scale(1);} 35%{ transform:scale(1.35);} 60%{ transform:scale(0.92);} 100%{ transform:scale(1);} }
+  .like-icon.like-pop { animation: likePop .38s ease; }
+  /* Tombol bookmark Wishlist (pojok kartu/foto detail) -- nyala kuning pas udah ditandai. */
+  .wishlist-btn.is-wishlisted { color:#facc15; }
+  /* Kotak preview cepat pas kartu di-long-press (tahan ~0.48 detik) -- ngambang di tengah
+     kartu, transisi fade+scale halus, gak ganggu klik/scroll pas lagi disembunyiin
+     (pointer-events:none). */
+  .quick-preview-popup { position:absolute; left:50%; top:50%; z-index:20; width:90%; text-align:center; opacity:0; pointer-events:none; transform:translate(-50%,-50%) scale(.9); transition:opacity .16s ease, transform .16s ease; }
+  .quick-preview-popup.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .quick-preview-inner { background:rgba(12,7,22,.94); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:10px 12px; box-shadow:0 10px 30px rgba(0,0,0,.55); backdrop-filter:blur(6px); }
+  .quick-preview-title { font-size:11px; font-weight:700; color:#fff; line-height:1.3; }
+  .quick-preview-price { margin-top:3px; font-size:16px; font-weight:800; color:#c4b5fd; }
+  .quick-preview-hint { margin-top:3px; font-size:9px; color:rgba(255,255,255,.4); }
+  /* Baris info "Allref Bergaransi / Open Cicil / Open Tukar Tambah" di bawah kotak harga --
+     auto-scroll (marquee) tanpa putus ke kiri terus-terusan, niru video referensi. Mask kiri-
+     kanan bikin tepinya fade halus (bukan kepotong tegas) biar keliatan lebih rapi. */
+  .stok-info-marquee { overflow:hidden; width:100%; -webkit-mask-image:linear-gradient(to right, transparent, black 8%, black 92%, transparent); mask-image:linear-gradient(to right, transparent, black 8%, black 92%, transparent); }
+  .stok-info-marquee-track { display:inline-flex; align-items:center; width:max-content; animation: stokInfoMarqueeScroll 11s linear infinite; }
+  @keyframes stokInfoMarqueeScroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  .modal-overlay { background: rgba(0,0,0,.65); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+  .scrollbar-thin::-webkit-scrollbar { width:6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(168,85,247,.5); border-radius:3px; }
+  .row3-wrap { display:flex; flex-direction:column; width:100%; height:100%; gap:2px; }
+  .row3-wrap > div { flex:1 1 0; overflow:hidden; }
+  .toast { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:80; }
+  .toast.toast-yellow { background:#facc15; color:#241a00; border:1px solid rgba(0,0,0,.15); font-weight:700; -webkit-backdrop-filter:none; backdrop-filter:none; top:auto; bottom:5.5rem; transform:translateX(-50%); }
+
+  /* ---------- Animasi ---------- */
+  /* Animasi "manggil" buat tombol Hubungi Admin: glow pulsing + bounce halus. */
+  .btn-attract {
+    position: relative;
+    animation: attractBounce 1.6s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(168,85,247,.6);
+  }
+  .btn-attract::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    box-shadow: 0 0 0 0 rgba(168,85,247,.55);
+    animation: attractPulse 1.6s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes attractBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  @keyframes attractPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(168,85,247,.55); opacity:1; }
+    70%  { box-shadow: 0 0 0 10px rgba(168,85,247,0); opacity:.6; }
+    100% { box-shadow: 0 0 0 10px rgba(168,85,247,0); opacity:0; }
+  }
+  /* Titik indikator slide (dots) - track persisten biar transisinya beneran keanimasi. */
+  .dots-wrap { overflow:hidden; height:10px; }
+  .dots-track { display:flex; align-items:center; transition: transform .25s ease; }
+  .dots-slot { width:10px; height:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .dots-dot { transition: width .25s ease, height .25s ease, background-color .25s ease; display:block; }
+  .bg-glow { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  /* PERF: dulu pakai filter:blur(70px) di 3 lapisan besar yang digerakin terus -- itu mahal banget buat GPU HP
+     (blur dihitung ulang & makan memori layer). Sekarang pakai radial-gradient halus yang tampilannya
+     hampir sama tapi TANPA filter, jadi jauh lebih ringan pas scroll. */
+  .bg-glow span { position:absolute; border-radius:9999px; opacity:.4; will-change:transform; }
+  .bg-glow span:nth-child(1) { width:480px; height:480px; background:radial-gradient(circle, rgba(168,85,247,.9) 0%, rgba(168,85,247,0) 68%); top:-160px; left:-160px; animation: blobFloat1 16s ease-in-out infinite; }
+  .bg-glow span:nth-child(2) { width:540px; height:540px; background:radial-gradient(circle, rgba(236,72,153,.9) 0%, rgba(236,72,153,0) 68%); bottom:-190px; right:-190px; animation: blobFloat2 18s ease-in-out infinite; }
+  .bg-glow span:nth-child(3) { width:380px; height:380px; background:radial-gradient(circle, rgba(139,92,246,.9) 0%, rgba(139,92,246,0) 68%); top:calc(40% - 80px); left:calc(50% - 80px); animation: blobFloat3 20s ease-in-out infinite; }
+
+  /* Partikel melayang di seluruh background (kunang-kunang ungu/pink) */
+  .bg-particles { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .bg-particles i {
+    position:absolute; bottom:-10px; display:block; border-radius:9999px;
+    background: radial-gradient(circle, rgba(216,180,254,1) 0%, rgba(168,85,247,.6) 55%, rgba(168,85,247,0) 75%);
+    animation-name: particleRise;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes particleRise {
+    0%   { transform: translate(0,0) scale(.6); opacity:0; }
+    10%  { opacity:.9; }
+    50%  { transform: translate(var(--drift,20px), -50vh) scale(1); opacity:.7; }
+    90%  { opacity:0; }
+    100% { transform: translate(calc(var(--drift,20px) * 2), -105vh) scale(.5); opacity:0; }
+  }
+  @keyframes blobFloat1 { 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(40px,60px) scale(1.15);} }
+  @keyframes blobFloat2 { 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-50px,-30px) scale(1.1);} }
+  @keyframes blobFloat3 { 0%,100%{ transform:translate(-50%,-50%) scale(1);} 50%{ transform:translate(-50%,-50%) scale(1.25);} }
+  #app-root { position:relative; z-index:1; overflow-x:hidden; }
+
+  @keyframes fadeInUp { from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+  @keyframes panelSwitchFade { from{ opacity:0; transform:translateY(10px) scale(.98);} to{ opacity:1; transform:translateY(0) scale(1);} }
+  .panel-fade { animation: panelSwitchFade .35s cubic-bezier(.22,.85,.32,1) both; }
+  @keyframes tabIconTap { 0%{ transform:scale(1) rotate(0deg); } 35%{ transform:scale(1.35) rotate(-10deg); } 65%{ transform:scale(.9) rotate(6deg); } 100%{ transform:scale(1) rotate(0deg); } }
+  .tab-icon-tap { animation: tabIconTap .5s cubic-bezier(.34,1.56,.64,1); }
+  .tab { transition: color .25s ease, border-color .25s ease; }
+  /* will-change: browser nyiapin layer GPU sendiri buat elemen yang animasinya jalan, jadi gak
+     numpang di layer parent-nya terus bikin acara render ulang jadi berat/patah-patah (ngeframe)
+     pas banyak kartu animasi bareng-bareng. Dilepas otomatis stlh animasi kelar (via 'both' +
+     browser modern udah pinter ngatur ini sendiri, aman dipasang permanen di elemen kecil gini). */
+  .anim-in { animation: fadeInUp .22s cubic-bezier(.22,.85,.32,1) both; will-change: opacity, transform; }
+  /* Skeleton loading (kotak placeholder abu-abu sebelum data postingan kebuka) dulu nongol
+     instan tanpa animasi sama sekali, jadi kelihatan nyelonong duluan sementara elemen lain
+     (logo, chip, dst) masih pelan-pelan fade-in -- keliatan berantakan/gak nyambung. Sekarang
+     dikasih fade-in yang sama, mulai bareng chip kategori & kartu postingan (.76s pas
+     first-load). */
+  .skeleton-fade { opacity:0; animation: fadeInUp .3s cubic-bezier(.22,.85,.32,1) both; }
+  body.first-load .skeleton-fade { animation-delay:.76s !important; }
+  /* Animasi masuk khusus per kartu postingan (stok/rental) di homepage: pop + naik dikit,
+     cepat (gak bikin nunggu), jalan tiap kartu muncul/dirender.
+     PERF FIX: dulu ada kilatan glow lewat animasi box-shadow di sini -- box-shadow itu properti
+     yang MAHAL buat browser (harus di-paint ulang tiap frame, beda sama transform/opacity yang
+     cukup digeser di GPU/compositor doang). Karena animasi ini jalan bareng-bareng di SEMUA
+     kartu tiap kali grid dirender ulang (pindah tab/kategori/geser stok), efek glow-nya jadi
+     salah satu penyebab utama kerasa "ngeframe" pas banyak kartu muncul sekaligus. Glow-nya
+     dibuang, animasi pop (naik+membesar+fade) tetap jalan karena itu murah/GPU-friendly. */
+  @keyframes cardPopIn {
+    0%   { opacity:0; transform:translateY(14px) scale(.94); }
+    65%  { opacity:1; transform:translateY(-2px) scale(1.015); }
+    100% { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .card.stock-card.anim-in { animation: cardPopIn .34s cubic-bezier(.22,.85,.32,1) both; }
+  /* contain: layout+style bikin browser nganggep tiap kartu sebagai "kotak" render yang mandiri
+     -- pas satu kartu lagi animasi masuk/foto lagi loading, browser gak perlu itung ulang layout
+     kartu-kartu lain di grid yang sama, jadi jauh lebih smooth pas scroll cepat/banyak kartu.
+     (Sengaja gak pake contain:paint krn itu bakal motong glow box-shadow pas kartu ditekan.) */
+  .card.stock-card { contain: layout style; }
+  /* Animasi pas buka modal apapun (detail postingan, login, profil, kategori, dll):
+     overlay fade in, panel di dalamnya slide-up dikit + fade in bareng. */
+  @keyframes modalOverlayIn { from{ opacity:0; } to{ opacity:1; } }
+  @keyframes modalPanelIn { from{ opacity:0; transform:translateY(14px) scale(.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+  .modal-overlay.flex { animation: modalOverlayIn .18s ease both; }
+  .modal-overlay.flex > div:first-child { animation: modalPanelIn .22s ease both; }
+  /* Animasi masuk khusus modal detail postingan (dipakai bareng buat FF, ML, & Rental --
+     sama-sama lewat #modal-detail): slide-up lebih jauh + sedikit scale + kilatan glow ungu,
+     override animasi modal generik di atas biar detail postingan kerasa lebih hidup. */
+  @keyframes modalPanelInDetail {
+    0%   { opacity:0; transform:translateY(28px) scale(.96); }
+    60%  { opacity:1; transform:translateY(-2px) scale(1.008); }
+    100% { opacity:1; transform:translateY(0) scale(1); }
+  }
+  #modal-detail.flex > div:first-child { animation: modalPanelInDetail .4s cubic-bezier(.22,.85,.32,1) both; }
+  /* Badge kecil (SOLD OUT, FLASH SALE, pin) muncul dengan efek pop biar lebih hidup. */
+  @keyframes badgePop { 0%{ opacity:0; transform:scale(.5); } 70%{ transform:scale(1.08); } 100%{ opacity:1; transform:scale(1); } }
+  .badge-pop { animation: badgePop .32s cubic-bezier(.34,1.56,.64,1) both; }
+  /* Toast notifikasi fade in pas muncul. */
+  #toast:not(.hidden) { animation: toastFadeIn .2s ease both; }
+  @keyframes toastFadeIn { from{ opacity:0; } to{ opacity:1; } }
+
+
+  /* Panel modal detail digeser+fade pas ditutup lewat tombol "Lihat stok lainnya" (lihat
+     goBackToGridWithSlide di JS) -- arahnya ke kiri, ngikutin arah panah "‹" di tombolnya. */
+  .detail-card-bg { transition: transform .22s cubic-bezier(.22,.85,.32,1), opacity .22s ease; }
+  .detail-card-bg.slide-out-left { transform: translateX(-6%); opacity: 0; }
+
+  /* Isi konten detail postingan (harga, opsi durasi rental, tombol Bagikan/Beli, dst) muncul
+     satu-satu digeser dikit dari bawah + fade, biar kerasa hidup pas modal detail baru kebuka
+     -- BUKAN cuma foto/panelnya doang yang animasi, tapi teks & tombol di bawahnya juga. */
+  @keyframes detailContentIn { from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .detail-content-in { animation: detailContentIn .38s cubic-bezier(.22,.85,.32,1) both; }
+
+  /* Bingkai foto stok/rental (gambar + tombol ‹›/dots-nya, satu kesatuan) meluncur dari KIRI
+     pas detail baru kebuka -- cuma sekali pas post-nya baru pertama kali dirender, bukan tiap
+     scroll ke postingan lain di feed (lihat renderDetailHtml, skipEntrance). */
+  @keyframes detailFrameInLeft { from{ opacity:0; transform:translateX(-26px); } to{ opacity:1; transform:translateX(0); } }
+  .detail-frame-in { animation: detailFrameInLeft .45s cubic-bezier(.22,.85,.32,1) both; }
+
+  /* Slider "Rincian Harian" per minggu di Statistik Stok (geser kiri/kanan, snap per minggu). */
+  .stats-week-slider { display:flex; align-items:flex-start; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .stats-week-slider::-webkit-scrollbar { display:none; }
+  .stats-week-slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+
+  /* Judul modal detail ("Stok/Rental Touka Enay") -- fade-in halus tiap kali kebuka/berubah,
+     disamain kayak animasi elemen lain di detail (pakai class .detail-content-in yang sama). */
+  #detail-modal-title-label { display:inline-block; }
+
+  /* Reveal-on-scroll: dipakai buat konten di paling bawah halaman (footer info & kolom kontak)
+     -- muncul (fade + naik dikit) pas kescroll masuk layar, bukan langsung keliatan dari awal.
+     Class "is-visible" ditambahin lewat IntersectionObserver di JS (lihat initScrollReveal). */
+  .scroll-reveal { opacity:0; transform:translateY(24px); transition: opacity .6s cubic-bezier(.22,.85,.32,1), transform .6s cubic-bezier(.22,.85,.32,1); }
+  .scroll-reveal.is-visible { opacity:1; transform:translateY(0); }
+  .scroll-reveal-grid > div:nth-child(1){ transition-delay:0s }
+  .scroll-reveal-grid > div:nth-child(2){ transition-delay:.08s }
+  .scroll-reveal-grid > div:nth-child(3){ transition-delay:.16s }
+  .scroll-reveal-grid > div:nth-child(4){ transition-delay:.24s }
+  .scroll-reveal-grid > div:nth-child(5){ transition-delay:.32s }
+  .scroll-reveal-grid > div:nth-child(6){ transition-delay:.4s }
+
+  button, .tab, .chip, .game, a { transition: transform .15s ease, opacity .2s ease, background-color .2s ease, border-color .2s ease; touch-action: manipulation; }
+  button:active, .tab:active, .chip:active, .game:active, a:active { transform: scale(.95); }
+  /* BUG FIX: tombol foto+judul DI DALAM kartu (dulunya elemen <button>) sebelumnya ikut kena rule
+     generic ":active { scale(.95) }" di atas -- jadi pas kartu luarnya membesar lewat .is-pressed,
+     tombol di dalamnya malah MENGECIL bareng waktu yang sama (dua animasi tabrakan), bikin isi
+     kartu (foto/teks) keliatan "masuk ke dalam" & muncul celah gelap di pinggirnya. Elemennya
+     sendiri udah diganti dari <button> jadi <div role="button"> (BUG FIX LAIN: <button> ini
+     ternyata NGEBUNGKUS tombol Wishlist yang juga punya onclick sendiri -- nested interactive
+     element kayak gitu bikin sebagian browser Android butuh beberapa kali tap dulu baru
+     "kedaftar" kliknya, gak konsisten. <div role="button"> gak kena masalah nesting itu tapi
+     tetap aksesibel/bisa di-tab), jadi otomatis udah gak kena rule generic button:active lagi --
+     baris di bawah ini disisain buat jaga-jaga aja kalau ada .stock-card > button lain nantinya. */
+  .stock-card > button:active, .stock-card > [role="button"]:active { transform: none; }
+  .primary { background:#a855f7; color:#fff; transition: background-color .2s ease, transform .15s ease; }
+
+  /* Segmented toggle animasi geser (dipakai di toggle Free Fire/Mobile Legends & toggle
+     game rental) -- indikator background posisinya digeser via JS pakai translateX,
+     jadi pas ganti game keliatan "meluncur" bukan cuma ganti warna instan. */
+  .segwrap { position: relative; isolation: isolate; }
+  /* Track slideshow (geser foto detail akun & banner promo): dulu pakai utility Tailwind
+     "transition-transform duration-300" (300ms, kurva bawaan Tailwind) yang kerasa kaku/
+     nyentak pas geser slide. Diganti kurva yang sama kayak animasi lain di web ini
+     (cubic-bezier(.22,.85,.32,1)) + durasi sedikit lebih panjang biar geserannya mulus. */
+  /* FIX (potensi "nyendat" sepersekian detik pas swipe foto PERTAMA kali disentuh, kerasa lebih
+     jelas di HP low-end): ditambahin will-change: transform biar browser nyiapin layer GPU-nya
+     dari awal render, BUKAN nunggu jari nyentuh dulu baru nyiapin -- geser jadi mulus dari
+     sentuhan pertama, bukan cuma yang kedua dst. */
+  .slide-track { transition: transform .38s cubic-bezier(.22,.85,.32,1); will-change: transform; }
+  .segwrap .seg-indicator {
+    position: absolute; top: 0; bottom: 0; left: 0; border-radius: 0.5rem;
+    background: #a855f7; z-index: 0; pointer-events: none;
+    transition: transform .3s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), background-color .25s ease;
+    /* Dulu kotak ini (indikator background toggle FF/ML dkk) langsung muncul solid dari awal
+       (dibuat/diposisikan via JS pas requestAnimationFrame pertama, gak terikat animasi apapun),
+       padahal tombolnya sendiri (teks "Free Fire"/"Mobile Legends") baru fade-in belakangan
+       lewat #game-toggle-wrap .game (delay .68s). Jadi kotaknya keliatan nongol duluan, teksnya
+       nyusul -- kesannya dua elemen kepisah. Sekarang kotaknya dikasih fade-in yang sama biar
+       nyatu sama tombolnya (lihat body.first-load .segwrap .seg-indicator di bawah).
+       PAKAI keyframe khusus (simpleFadeIn) yang cuma animasiin opacity -- BUKAN fadeInUp yang
+       ikutan animasiin "transform", soalnya transform di elemen ini udah dipakai JS buat geser
+       posisi (translateX) tiap ganti game; kalau ikut fadeInUp, animasinya bakal numpuk/bentrok
+       sama transform posisi itu abis animasi kelar. */
+    opacity: 0; animation: simpleFadeIn .5s ease both;
+  }
+  @keyframes simpleFadeIn { from{ opacity:0; } to{ opacity:1; } }
+  body.first-load .segwrap .seg-indicator { animation-delay:.68s !important; }
+  /* Khusus indikator di DALAM modal (toggle Free Fire/Mobile Legends, rental game, dst):
+     langsung tampil pas modal dibuka, TANPA fade-in .5s (yang di homepage tetap dipertahankan).
+     Transisi geser (transform/width) di aturan .seg-indicator di atas tetap berlaku normal,
+     jadi pas pindah FF -> ML animasi geser & ganti warnanya tetap ada, cuma pas PERTAMA
+     muncul aja yang gak pakai animasi. */
+  .modal-overlay .segwrap .seg-indicator { opacity: 1; animation: none; }
+  .segwrap button { position: relative; z-index: 1; }
+  .segwrap button.primary, .segwrap button.primary-pink { background: transparent !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .segwrap .seg-indicator { transition: none; }
+  }
+
+  header img#p-logo { animation: fadeInUp .6s ease both; }
+  h1 { animation: fadeInUp .6s ease .05s both; }
+  #p-subtitle, #p-subtitle2 { animation: fadeInUp .6s ease .1s both; }
+
+  /* ---------- Mode Terang (cuma buat admin, disimpan lokal di device ini) ---------- */
+  html.light-theme, html.light-theme body { background:#f6f3ff; color:#241a3d; }
+  /* Teks kode kuning (mis. "FF23") -- di mode gelap kuning terang biasa masih jelas kebaca,
+     tapi di mode terang kuning yang sama nyaris nyatu sama background putih/ungu muda, jadi
+     khusus mode terang dipakein kuning yang lebih gelap/pekat biar tetap kontras & kebaca. */
+  .kode-yellow-text { color:#facc15; }
+  html.light-theme .kode-yellow-text { color:#eab308; }
+  html.light-theme .bg-glow span { opacity:.4; }
+  html.light-theme .bg-particles { opacity:.6; }
+  html.light-theme .card { background: rgba(255,255,255,.78); border:1px solid rgba(0,0,0,.16); }
+  html.light-theme .card.stock-card { border:1.2px solid rgba(0,0,0,.4); }
+  html.light-theme .chip { background:#ffffff; border:1px solid rgba(90,60,140,.18); color:#5b4a7a; }
+  html.light-theme .chip.active { background:#a855f7; color:#fff; border-color:#a855f7; }
+  html.light-theme .chip.active-pink { background:#ec4899; color:#fff; border-color:#ec4899; }
+  html.light-theme .chip.danger.active { background:#ef4444; border-color:#ef4444; color:#fff; }
+  html.light-theme .input { background:#ffffff; border:1px solid rgba(90,60,140,.22); color:#241a3d; }
+  html.light-theme .btn-ghost { border:1px solid rgba(90,60,140,.28); color:#241a3d; }
+  html.light-theme .modal-overlay { background: rgba(90,70,130,.42); }
+  html.light-theme .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(168,85,247,.35); }
+  html.light-theme .text-purple-300 { color:#9333ea !important; }
+  html.light-theme .text-white\/90 { color: rgba(36,26,61,.92) !important; }
+  html.light-theme .text-white\/80 { color: rgba(36,26,61,.82) !important; }
+  html.light-theme .text-white\/70 { color: rgba(36,26,61,.75) !important; }
+  html.light-theme .text-white\/60 { color: rgba(36,26,61,.65) !important; }
+  html.light-theme .text-white\/50 { color: rgba(36,26,61,.55) !important; }
+  html.light-theme .text-white\/40 { color: rgba(36,26,61,.42) !important; }
+  html.light-theme .text-white\/45 { color: rgba(36,26,61,.48) !important; }
+  html.light-theme .hover\:text-white\/75:hover { color: rgba(36,26,61,.78) !important; }
+  html.light-theme .modal-close:hover { color: rgba(36,26,61,.85) !important; }
+  html.light-theme .rental-opt-label { color:#241a3d !important; }
+  html.light-theme .text-white\/30 { color: rgba(36,26,61,.34) !important; }
+  html.light-theme .text-white\/25 { color: rgba(36,26,61,.28) !important; }
+  html.light-theme .border-white\/10 { border-color: rgba(90,60,140,.16) !important; }
+  html.light-theme .bg-white\/20 { background-color: rgba(90,60,140,.12) !important; }
+  html.light-theme .bg-white\/10 { background-color: rgba(90,60,140,.09) !important; }
+  html.light-theme .bg-white\/30 { background-color: rgba(90,60,140,.18) !important; }
+  html.light-theme .bg-white\/5 { background-color: rgba(90,60,140,.06) !important; }
+  html.light-theme .hover\:bg-white\/5:hover { background-color: rgba(90,60,140,.08) !important; }
+  html.light-theme .bg-white\/\[0\.03\] { background-color: rgba(90,60,140,.05) !important; }
+  html.light-theme .border-white\/30 { border-color: rgba(90,60,140,.32) !important; }
+  html.light-theme .border-white\/20 { border-color: rgba(90,60,140,.24) !important; }
+  html.light-theme .hover\:border-white\/20:hover { border-color: rgba(90,60,140,.26) !important; }
+  html.light-theme .text-white\/35 { color: rgba(36,26,61,.32) !important; }
+  html.light-theme .text-white\/55 { color: rgba(36,26,61,.58) !important; }
+  html.light-theme .text-white\/85 { color: rgba(36,26,61,.85) !important; }
+  html.light-theme .bg-white\/\[0\.06\] { background-color: rgba(90,60,140,.08) !important; }
+  html.light-theme .text-pink-300 { color:#db2777 !important; }
+  html.light-theme .text-pink-400 { color:#db2777 !important; }
+  html.light-theme .text-amber-300 { color:#b45309 !important; }
+  html.light-theme .text-amber-300\/90 { color:#b45309 !important; }
+  html.light-theme .border-amber-400\/25 { border-color: rgba(180,83,9,.3) !important; }
+  html.light-theme .bg-amber-500\/\[0\.06\] { background-color: rgba(180,83,9,.06) !important; }
+  html.light-theme #detail-modal-title { color:#241a3d; }
+  html.light-theme .sold-overlay-badge { color:#ffffff; }
+  /* Warna-warna badge/label lain yang kepasnya pas di background gelap, tapi kalau dipakai
+     apa adanya di mode terang (background putih/ungu muda) jadi kurang kebaca -- digelapin
+     dikit biar kontrasnya tetap enak dibaca. */
+  html.light-theme .text-purple-400 { color:#9333ea !important; }
+  html.light-theme .text-purple-300\/70 { color: rgba(147,51,234,.75) !important; }
+  html.light-theme .text-pink-400\/70 { color: rgba(219,39,119,.75) !important; }
+  html.light-theme .text-green-400 { color:#16a34a !important; }
+  html.light-theme .text-orange-300 { color:#c2410c !important; }
+  html.light-theme .text-red-400 { color:#dc2626 !important; }
+  /* Instastory viewer selalu di atas latar hitam (kayak IG), jadi teksnya jangan ikut
+     kena aturan mode-terang (yang bikin teks abu-abu jadi gelap & ilang di atas hitam). */
+  html.light-theme #modal-story .text-white,
+  html.light-theme #modal-story .text-white\/70,
+  html.light-theme #modal-story .text-white\/60,
+  html.light-theme #modal-story .text-white\/55,
+  html.light-theme #modal-story .text-white\/50,
+  html.light-theme #modal-story .text-white\/80,
+  html.light-theme #modal-story .text-white\/85,
+  html.light-theme #modal-story .text-white\/30 { color: rgba(255,255,255,.92) !important; }
+
+  /* ---------- Cegah download gampang lewat tahan-gambar/klik-kanan (cuma bisa screenshot) ---------- */
+  img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
+
+  /* ---------- Ring foto profil bergaya Instastory: mutar selama ada story yg belum ditonton ---------- */
+  /* Cuma layer ring (#p-logo-ring) yang muter -- foto profil di layer terpisah jadi tetep diem.
+     Gradientnya dikasih banyak warna (kayak IG asli: kuning->pink->ungu->biru->kuning) biar gak ada
+     bagian "pudar/gelap" pas transisi antar warna, dan cuma rotate (gak ada scale) biar puterannya
+     mulus konstan, gak "loncat-loncat" kayak sebelumnya. */
+  @keyframes storyRingSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  #p-logo-ring { overflow:hidden; }
+  #p-logo-ring .ring-layer { position:absolute; inset:0; border-radius:9999px; opacity:0; transition: opacity .6s ease; }
+  #p-logo-ring .ring-layer-spin {
+    background: conic-gradient(from 0deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75);
+    animation: storyRingSpin 3.4s linear infinite;
+    will-change: transform, opacity;
+  }
+  #p-logo-ring .ring-layer-gray { background: rgba(255,255,255,.25); }
+  #p-logo-ring .ring-layer-none { background: rgba(255,255,255,.18); }
+  #p-logo-ring.story-ring-unseen .ring-layer-spin { opacity:1; }
+  #p-logo-ring.story-ring-seen .ring-layer-gray { opacity:1; }
+  #p-logo-ring.story-ring-none .ring-layer-none { opacity:1; }
+  html.light-theme #p-logo-ring .ring-layer-gray { background: rgba(90,60,140,.22); }
+  html.light-theme #p-logo-ring .ring-layer-none { background: rgba(90,60,140,.16); }
+  /* Lingkaran "celah" di antara ring dan foto profil ikutan warna tema: gelap di dark mode,
+     terang di light mode (sebelumnya selalu item/gelap walau lagi mode terang). */
+  html.light-theme #p-logo-gap { border-color:#f6f3ff; background:#f6f3ff; }
+  /* ---------- Badge lagu di Instastory: 4 gaya kayak sticker musik Instagram, admin pilih 1 gaya
+     pas upload lagu ke story -- "pil" (equalizer + teks kecil, gaya lama), "piringan" (vinyl muter
+     + foto album), "album" (kartu foto album + teks di bawahnya), "teks" (judul & penyanyi gede di
+     tengah layar). Yang gak dipilih otomatis disembunyiin, cuma 1 yang tampil per foto. ---------- */
+  .music-eq { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 8px; }
+  .music-eq span { width: 2px; background: #fff; border-radius: 1px; transform-origin: bottom; will-change: transform; animation-name: eqBounce; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+  /* Font khusus badge nama lagu di story, dibikin mirip gaya Instagram (bukan Baloo 2 yang dipakai di seluruh web) */
+  #story-music-text, #story-music-art-text, #story-music-text-big { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: -0.1px; }
+  .music-eq span:nth-child(1) { height: 100%; animation-duration: 1.3s; animation-delay: 0s; }
+  .music-eq span:nth-child(2) { height: 100%; animation-duration: 1.3s; animation-delay: -.65s; }
+  .music-eq span:nth-child(3) { height: 100%; animation-duration: 1.3s; animation-delay: 0s; }
+  @keyframes eqBounce { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+  .music-eq.eq-paused span { animation-play-state: paused; }
+  html.light-theme .music-eq span { background: #241a3d; }
+
+  /* Gaya "Piringan": foto album muter pelan terus kayak vinyl/turntable, plus alur piringan
+     digambar lewat gradient bulat biar keliatan kayak piringan hitam beneran, bukan cuma foto bulat. */
+  #story-music-disc-wrap { position: relative; }
+  #story-music-disc-wrap::after { content:''; position:absolute; inset:0; border-radius:9999px; pointer-events:none; background: radial-gradient(circle, rgba(0,0,0,.88) 0 13%, transparent 14%), repeating-radial-gradient(circle, rgba(0,0,0,.22) 0, rgba(0,0,0,.22) 1px, transparent 1px, transparent 5px); }
+  #story-music-disc-art { animation: discSpin 5.5s linear infinite; }
+  #story-music-disc.eq-paused #story-music-disc-art { animation-play-state: paused; }
+  @keyframes discSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* Gaya "Teks Besar": judul & penyanyi gede tebal di tengah layar, mirip sticker Lyrics Instagram
+     (bukan lirik yang disinkron per-baris -- cuma tampilan judul lagu yang eye-catching). */
+  #story-music-text-big { font-weight: 800; text-shadow: 0 2px 14px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.8); line-height: 1.2; }
+
+  /* Tombol pilih gaya badge musik di form admin (4 kotak kecil, mirip pilih sticker musik IG) */
+  .badge-style-btn { border: 2px solid rgba(255,255,255,.12); background: rgba(0,0,0,.25); transition: border-color .15s ease, background .15s ease; }
+  .badge-style-btn.active { border-color: #a855f7; background: rgba(168,85,247,.2); }
+
+  /* ---------- Widget "potong lagu" (trimmer) di Kelola Instastory: didesain ulang. ----------
+     Bug lama: trimmerEl pake overflow-hidden LANGSUNG di container yang sama isinya gagang
+     geser -- akibatnya separuh area sentuh gagang pas mepet 0%/100% (ujung kiri/kanan, yang
+     justru paling sering mau digeser) kepotong "invisible" sama overflow-hidden, jadi gagangnya
+     suka gak kepencet. Sekarang overflow-hidden cuma dipasang ke wrapper VISUAL (gelombang lagu
+     + area terpilih) lewat .song-trim-visual, bukan lagi ke container gagangnya, jadi hitbox
+     gagang selalu utuh 36px penuh di semua posisi. Gagangnya sendiri juga diganti dari bar tipis
+     polos jadi ada "knob" bulat yang keliatan jelas bisa dipegang, plus nyala lebih terang +
+     membesar dikit pas lagi digeser (class .is-dragging) biar kerasa responsif. */
+  .song-trim-visual { position:absolute; inset:0; overflow:hidden; border-radius:0.5rem; }
+  .song-trim-handle { touch-action: none; z-index: 5; }
+  .song-trim-grip { display:block; height:100%; width:5px; border-radius:9999px; background:#c084fc; box-shadow:0 0 0 3px rgba(168,85,247,.16), 0 0 10px rgba(168,85,247,.5); transition: background-color .15s ease, box-shadow .15s ease; }
+  .song-trim-knob { position:absolute; top:50%; left:50%; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:9999px; background:#c084fc; border:2.5px solid rgba(255,255,255,.92); box-shadow:0 1px 5px rgba(0,0,0,.45); transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+  .song-trim-handle.is-dragging .song-trim-grip { background:#e9d5ff; box-shadow:0 0 0 5px rgba(233,213,255,.3), 0 0 18px rgba(233,213,255,.85); }
+  .song-trim-handle.is-dragging .song-trim-knob { background:#e9d5ff; transform: scale(1.3); box-shadow:0 2px 10px rgba(0,0,0,.45); }
+  /* Area terpilih (di antara 2 gagang) sekarang bisa digeser BARENG (start & end ikut pindah
+     sekaligus, durasinya tetap) -- gak perlu lagi geser gagang kiri dulu baru kanan manual buat
+     mindahin posisi potongan lagu. Kursor "grab" nandain area ini bisa di-drag. */
+  .song-trim-range { touch-action: none; cursor: grab; }
+  .song-trim-range.is-dragging { cursor: grabbing; background: rgba(233,213,255,.3) !important; border-color: #e9d5ff !important; }
+  /* Panel pembungkus pengaturan lagu (per-foto & playlist) biar keliatan sebagai satu grup yang
+     rapi -- sebelumnya cuma numpuk polos jadi berantakan pas banyak field sekaligus. */
+  .song-config-panel { border:1px solid rgba(168,85,247,.18); background:rgba(168,85,247,.05); border-radius:0.75rem; padding:0.75rem; }
+
+  /* Pas story ditahan (hold), semua UI (progress bar, header, badge lagu, tombol) ilang
+     bersih -- cuma foto instastory-nya doang yang keliatan, kayak Instagram asli. */
+  /* Story gak boleh bisa discroll/di-drag kayak halaman biasa -- cuma bisa ditutup lewat
+     tombol X, tombol back HP/browser, atau klik nama/profil. */
+  #modal-story, #story-inner { overflow:hidden; overscroll-behavior:none; touch-action:none; }
+  #story-img { touch-action:none; }
+  body.story-open { overflow:hidden; overscroll-behavior:none; }
+  /* Kunci scroll beranda selama modal apapun kebuka (Tambah/Edit Postingan, Detail, dll).
+     Tanpa ini, di HP scroll di dalam form yang panjang bisa "kebablasan" pas nyampe atas/bawah
+     dan keteruskan jadi nge-scroll layout beranda di belakangnya.
+     PENTING: overflow:hidden doang di body TERBUKTI GAK CUKUP di banyak HP (terutama iOS
+     Safari) -- browser tetap bisa nge-scroll body di belakang modal walau overflow-nya hidden.
+     Makanya position:fixed dipasang juga di sini (dikombinasikan sama JS di openModal/closeModal
+     yang nyimpen & balikin posisi scroll semula). Ini yang beneran ngunci body-nya, gak cuma
+     nyembunyiin scrollbar-nya doang -- ini akar penyebab bug "scroll di detail stok malah
+     homepage di belakang yang ke-scroll". */
+  body.modal-open { position:fixed; top:0; left:0; right:0; overflow:hidden; overscroll-behavior:none; width:100%; }
+  .modal-overlay, .modal-overlay .overflow-y-auto { overscroll-behavior: contain; }
+  #story-inner > * { transition: opacity .18s ease; }
+  #story-inner.story-ui-hidden > *:not(#story-img):not(#story-tap-prev):not(#story-tap-next):not(#story-audio):not(#story-caption-text) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- Teks overlay di Instastory (kayak fitur "Aa" Instagram): tebal, huruf besar,
+     ada outline/shadow biar tetap kebaca di foto apapun. Posisinya bisa atas/tengah/bawah,
+     diatur admin pas upload foto instastory. ---------- */
+  #story-caption-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+    text-shadow: 0 2px 10px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.7);
+    word-break: break-word;
+  }
+
+  /* ---------- Pil dots + hint zoom yang nempel di atas gambar (modal detail, gaya TikTok) ----------
+     Ini overlay DI ATAS FOTO (bukan di atas background halaman), jadi sengaja tetap item transparan
+     polos di kedua mode -- yang penting teks/dots-nya PAKAI warna sendiri (bukan text-white/bg-white
+     bawaan Tailwind), soalnya class itu ditimpa jadi gelap di mode terang & bikin gak kebaca kalau
+     dipakai di sini. */
+  .slideshow-topbar {
+    background: rgba(12,7,24,.55);
+    border: 1px solid rgba(255,255,255,.18);
+    box-shadow: 0 4px 14px rgba(0,0,0,.28);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  }
+  .slideshow-topbar-hint { display:inline-flex; align-items:center; gap:4px; color: rgba(255,255,255,.92); font-size:10px; font-weight:600; letter-spacing:.02em; line-height:1; white-space:nowrap; }
+  .slideshow-topbar-hint svg { width:11px; height:11px; flex-shrink:0; color:#d8b4fe; }
+  .slideshow-topbar .dots-wrap + .slideshow-topbar-hint { padding-top:5px; border-top:1px solid rgba(255,255,255,.12); }
+  .slideshow-topbar .dots-dot { background-color: rgba(255,255,255,.4) !important; }
+  .slideshow-topbar .dots-dot.bg-purple-400 { background-color: #ffffff !important; }
+  /* Di mode terang, rule html.light-theme .bg-white/20 & .bg-white/30 (buat ubah dot jadi ungu pudar
+     di tempat lain) spesifisitasnya lebih tinggi dari rule di atas, jadi dot non-aktif di pil ini
+     ikut jadi ungu pudar & nyaris ngilang di atas pil gelap. Override lagi khusus di sini biar tetap putih. */
+  html.light-theme .slideshow-topbar .dots-dot { background-color: rgba(255,255,255,.4) !important; }
+  html.light-theme .slideshow-topbar .dots-dot.bg-purple-400 { background-color: #ffffff !important; }
+
+  /* ---------- Background FULL modal detail postingan: gradient ungu-pink senada beranda ----------
+     Beda dari .card biasa (yang dipakai di tempat lain) -- ini khusus modal detail biar suasananya
+     senada sama glow ungu-pink di halaman utama, beda gradasi per mode terang/gelap. */
+  .detail-card-bg {
+    background:
+      radial-gradient(120% 55% at 12% -5%, rgba(168,85,247,.28), transparent 60%),
+      radial-gradient(120% 55% at 105% 105%, rgba(236,72,153,.20), transparent 60%),
+      #150f22;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  html.light-theme .detail-card-bg {
+    background:
+      radial-gradient(120% 55% at 12% -5%, rgba(216,180,254,.65), transparent 60%),
+      radial-gradient(120% 55% at 105% 105%, rgba(251,182,206,.55), transparent 60%),
+      #faf7ff;
+    border: 1px solid rgba(90,60,140,.14);
+  }
+
+  /* ---------- Panah kecil "scroll kebawah" di baris "Lihat stok lainnya" (in-flow, bukan melayang) ---------- */
+  .hint-arrow-bounce { display: inline-block; animation: hintArrowBounce 1.6s ease-in-out infinite; }
+  @keyframes hintArrowBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+
+  /* (garis pembatas antar postingan di feed detail dihapus lagi -- cukup jarak kosong, tanpa border/background) */
+
+  /* ---------- Footer banner "crown" ala Takapedia: langit gradasi + garis zigzag menyala + area gelap solid di bawah.
+     Warnanya ganti otomatis ungu (Free Fire) / pink (Mobile Legends) lewat class .theme-pink di #official-contact-footer,
+     di-toggle bareng logo lewat updateFooterLogo(). ---------- */
+
+  /* ---------- Animasi reveal pas halaman pertama kali kebuka: logo -> teks profil -> banner ->
+     ikon-ikon fitur nav -> chip kategori FF/ML, urut satu-satu (bukan bareng), pelan & smooth.
+     Ini cuma animasi CARA MUNCULNYA doang, tampilan akhir semua elemen tetap sama persis. ---------- */
+  @keyframes pageFadeUp {
+    0%   { opacity:0; transform:translateY(16px); }
+    100% { opacity:1; transform:translateY(0); }
+  }
+  #p-logo-btn { opacity:0; animation: navIconPop .6s cubic-bezier(.22,.85,.32,1) both; animation-delay:.02s }
+  header h1 { opacity:0; animation: pageFadeUp .55s cubic-bezier(.22,.85,.32,1) both; animation-delay:.06s }
+  #p-subtitle { display:block; opacity:0; animation: pageFadeUp .55s cubic-bezier(.22,.85,.32,1) both; animation-delay:.1s }
+  #p-subtitle2 { opacity:0; animation: pageFadeUp .55s cubic-bezier(.22,.85,.32,1) both; animation-delay:.14s }
+  header p:last-child { opacity:0; animation: pageFadeUp .55s cubic-bezier(.22,.85,.32,1) both; animation-delay:.18s }
+  #banner-wrap.flex, #banner-wrap:not(.hidden) { opacity:0; animation: pageFadeUp .6s cubic-bezier(.22,.85,.32,1) both; animation-delay:.22s }
+
+  nav a.card { opacity:0; animation: navIconReveal .55s cubic-bezier(.22,.85,.32,1) both; }
+  nav a.card:nth-child(1){ animation-delay:.3s }
+  nav a.card:nth-child(2){ animation-delay:.35s }
+  nav a.card:nth-child(3){ animation-delay:.4s }
+  nav a.card:nth-child(4){ animation-delay:.45s }
+  nav a.card:nth-child(5){ animation-delay:.5s }
+  nav a.card:nth-child(6){ animation-delay:.55s }
+  nav a.card svg { animation: navIconPop .55s cubic-bezier(.22,.85,.32,1) both; animation-delay: inherit; }
+
+  /* Tab Stok/Rental & toggle Free Fire/Mobile Legends: dulu gak dikasih animasi sama sekali
+     (langsung full opacity dari awal), jadi kelihatan "loncat" duluan di tengah-tengah elemen
+     lain yang lagi pada fade-in satu-satu. Sekarang disisipkan di urutan yang bener: abis ikon
+     nav (yang terakhir mulai .55s), sebelum chip kategori. Elemen ini statis (gak pernah
+     di-render ulang lewat innerHTML kayak chip), jadi animasinya cuma kejadian sekali aja pas
+     halaman pertama dibuka -- gak perlu di-scope body.first-load kayak chip. */
+  .tab { opacity:0; animation: pageFadeUp .5s cubic-bezier(.22,.85,.32,1) both; }
+  .tab:nth-child(1){ animation-delay:.6s }
+  .tab:nth-child(2){ animation-delay:.64s }
+  /* BUG FIX: dulu animasi masuk teks "Free Fire"/"Mobile Legends" ini gak di-scope ke
+     body.first-load, padahal tombolnya nempel di dalam #stok-panel yang di-toggle
+     display:none/block tiap ganti tab Stok<->Rental. Browser me-restart animasi CSS
+     tiap elemen balik keliatan dari display:none -- jadi teksnya keulang ngilang-muncul
+     TIAP KALI balik ke tab Stok, bukan cuma sekali pas web pertama dibuka. Sekarang
+     opacity:0 + animasinya cuma berlaku selama body masih punya class "first-load"
+     (dicopot otomatis oleh JS abis ~1.3 detik); di luar itu, teksnya statis full opacity. */
+  #game-toggle-wrap .game { opacity:1; }
+  body.first-load #game-toggle-wrap .game { opacity:0; animation: pageFadeUp .5s cubic-bezier(.22,.85,.32,1) both; }
+  /* BUG FIX: dulu pakai :nth-child, tapi JS (segMoveIndicator) nyisipin <div class="seg-indicator">
+     sebagai anak PERTAMA di wrapper yang sama (lihat insertBefore di segMoveIndicator). Itu bikin
+     hitungan :nth-child tombol .game ikut kegeser satu (indikator ngambil posisi ke-1), jadi delay
+     yang harusnya buat tombol "Free Fire" (harusnya duluan) malah kepakai tombol "Mobile Legends",
+     dan tombol "Free Fire" jadi nunggu lebih lama / kelihatan hilang sesaat pas animasi jalan.
+     :nth-of-type ngitung cuma sesama tag <button>, jadi <div> indikator yang disisipkan gak
+     ikut ngegeser urutannya. */
+  body.first-load #game-toggle-wrap .game:nth-of-type(1){ animation-delay:.68s }
+  body.first-load #game-toggle-wrap .game:nth-of-type(2){ animation-delay:.72s }
+  @keyframes navIconReveal {
+    0%   { opacity:0; transform: translateY(18px) scale(.86); box-shadow:0 0 0 rgba(236,72,153,0); }
+    60%  { opacity:1; transform: translateY(-3px) scale(1.04); box-shadow:0 0 26px rgba(236,72,153,.45); }
+    100% { opacity:1; transform: translateY(0) scale(1); box-shadow:0 0 0 rgba(236,72,153,0); }
+  }
+  @keyframes navIconPop {
+    0%   { transform:scale(.4) rotate(-8deg); opacity:0; }
+    65%  { transform:scale(1.18) rotate(3deg); opacity:1; }
+    100% { transform:scale(1) rotate(0deg); opacity:1; }
+  }
+  /* Chip kategori FF/ML: dikasih stagger juga lewat nth-child biar muncul satu-satu, bukan
+     bareng -- TAPI cuma pas pertama kali web dibuka (body.first-load). Kalau nggak di-scope
+     gini, tiap kali user pindah tab/game (yang re-render .chip.anim-in dari awal lagi) bakal
+     kena delay sampe hampir 1 detik itu juga, jadi kesannya lama banget/kayak ilang dulu baru
+     muncul. Class "first-load" dicopot otomatis oleh JS abis animasi awal kelar (lihat script
+     di bawah), jadi re-render sesudahnya pakai delay normal .anim-in aja (nyaris instan). */
+  body.first-load .chip.anim-in:nth-child(1){ animation-delay:.76s !important }
+  body.first-load .chip.anim-in:nth-child(2){ animation-delay:.78s !important }
+  body.first-load .chip.anim-in:nth-child(3){ animation-delay:.8s !important }
+  body.first-load .chip.anim-in:nth-child(4){ animation-delay:.82s !important }
+  body.first-load .chip.anim-in:nth-child(5){ animation-delay:.84s !important }
+  body.first-load .chip.anim-in:nth-child(6){ animation-delay:.86s !important }
+  body.first-load .chip.anim-in:nth-child(7){ animation-delay:.88s !important }
+  body.first-load .chip.anim-in:nth-child(8){ animation-delay:.9s !important }
+  /* Opsi urutan Terbaru/Termurah/Termahal ikut dianimasiin masuk pas pertama kali web dibuka,
+     nyambung abis chip kategori kelar (makanya delay-nya dimulai dari .94s, dikit di atas
+     delay terakhir chip di atas). Di-scope body.first-load juga kayak chip, soalnya #sort-wrap
+     ikut ada di dalam #stok-panel yang di-toggle display:none/'' pas pindah tab Stok<->Rental --
+     tanpa scope ini animasinya bakal keputer ulang tiap balik ke tab Stok, padahal maunya cuma
+     sekali pas awal buka web doang. */
+  body.first-load #sort-wrap label { opacity:0; animation: fadeInUp .22s cubic-bezier(.22,.85,.32,1) both; }
+  body.first-load #sort-wrap label:nth-of-type(1){ animation-delay:.94s !important }
+  body.first-load #sort-wrap label:nth-of-type(2){ animation-delay:.96s !important }
+  body.first-load #sort-wrap label:nth-of-type(3){ animation-delay:.98s !important }
+  /* Feedback pop kecil pas salah satu opsi urutan dipencet/dicentang. */
+  @keyframes sortOptPop { 0%{ transform:scale(1); } 40%{ transform:scale(1.12); } 70%{ transform:scale(.96); } 100%{ transform:scale(1); } }
+  .sort-opt-pop { animation: sortOptPop .35s cubic-bezier(.34,1.56,.64,1); }
+
+  /* ===== PERF 2026-10-05 (versi minimal) ===== */
+  /* sentinel "muat lebih banyak" ngisi 1 baris penuh di grid */
+  .grid-sentinel { grid-column: 1 / -1; }
+  /* animasi dekoratif TAMBAHAN yang ikut dijeda pas scroll (glow & partikel sudah ada di accessibility.css) */
+  body.is-scrolling .btn-attract,
+  body.is-scrolling .btn-attract::after,
+  body.is-scrolling #p-logo-ring .ring-layer-spin,
+  body.is-scrolling .stok-info-marquee-track,
+  body.is-scrolling .hint-arrow-bounce { animation-play-state: paused !important; }

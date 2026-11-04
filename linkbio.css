@@ -1,0 +1,40 @@
+  /* Halaman Link Bio (/info) -- halaman penuh sendiri (bukan modal) supaya bisa langsung
+     diakses & diindex sebagai URL toukaenay.com/info. */
+  #page-linkbio {
+    /* position/inset/z-index dobel sama class Tailwind "fixed inset-0 z-40" di HTML-nya --
+       sengaja ditulis eksplisit di sini juga (bukan cuma andalin util class Tailwind) soalnya
+       Tailwind CDN itu generate CSS-nya belakangan/dinamis, jadi kalau pas /info dibuka
+       CSS-nya belum sempat jalan, halaman ini tetap kejamin nutup penuh layar & gak nge-blank. */
+    position: fixed; inset: 0; z-index: 40;
+    /* Gradient flat sederhana (gak pake radial glow warna-warni lagi), ngikutin referensi
+       tampilan yang lebih simpel -- gelap di atas ke lebih gelap lagi di bawah. */
+    background: linear-gradient(180deg, #2a3142 0%, #171b26 100%);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  body.linkbio-open { overflow: hidden; }
+  .linkbio-avatar { width: 108px; height: 108px; border-radius: 9999px; object-fit: cover; border: 3px solid rgba(255,255,255,.18); background:#1c142d; }
+  .linkbio-btn { background: var(--linkbio-box-color, rgba(28,20,45,.62)); border: 1px solid rgba(255,255,255,.14); transition: transform .15s cubic-bezier(.22,.85,.32,1), border-color .2s ease; }
+  .linkbio-btn:active { transform: scale(.97); border-color: rgba(168,85,247,.5); }
+  .linkbio-icon-wrap { width: 38px; height: 38px; border-radius: 9999px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); font-size: 18px; }
+  .linkbio-icon-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .linkbio-text-color { color: var(--linkbio-text-color, #ffffff); }
+  .linkbio-music-toggle:not(.hidden) { display: flex; }
+  .linkbio-music-toggle { width: 42px; height: 42px; border-radius: 9999px; background: rgba(15,10,26,.75); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .15s ease, border-color .2s ease; }
+  .linkbio-music-toggle:active { transform: scale(.92); }
+  .linkbio-music-toggle.is-playing { border-color: rgba(168,85,247,.6); box-shadow: 0 0 0 3px rgba(168,85,247,.18); }
+  .linkbio-admin-row .input { min-width: 0; }
+  /* Cegah "kilas bayangan" halaman stok pas /info di-refresh langsung: sebelum JS sempat
+     jalan & manggil openLinkBio(), #app-root buru-buru disembunyiin + #page-linkbio
+     dimunculin duluan (kosongan dulu gapapa, nanti keisi begitu profil kebaca). Class ini
+     ditaruh oleh script paling awal <body> di bawah, sebelum konten lain sempat digambar
+     browser, dan otomatis dicopot lagi begitu openLinkBio() beneran jalan. */
+  body.route-boot-hide #app-root,
+  body.route-boot-hide .bg-glow,
+  body.route-boot-hide .bg-particles { display: none !important; }
+  body.route-boot-hide #page-linkbio { display: flex !important; background: #0f0a1a !important; }
+  /* Selama boot di /info (data profil asli belum selesai diambil dari server), isi halaman
+     Link Bio disembunyiin total -- sebelumnya sempat kegambar pakai data BAWAAN (nama/link
+     lama) sebentar sebelum diganti data yang sudah diedit. Class route-boot-hide dicopot oleh
+     openLinkBio() SETELAH renderLinkBio() jalan pakai data asli, jadi langsung muncul yang baru. */
+  body.route-boot-hide #page-linkbio > * { visibility: hidden !important; }
+  .linkbio-divider { user-select: none; }

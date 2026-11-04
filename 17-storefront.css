@@ -1,0 +1,145 @@
+/* 17-storefront.css — tampilan toko baru (dimuat paling akhir, di luar bundle).
+   1) grid stok/rental: HP 2 kolom, tablet & PC (mode situs desktop) 4 kolom
+   2) bagian Sold Out di bawah daftar ready (tab Semua / Free Fire / Mobile Legends)
+   3) badge SOLD OUT: font lebar + kotak kaca blur, tetap merah
+   4) sorotan ala story Instagram menggantikan tombol kontak
+   5) halaman /info: tanpa layar sementara saat refresh */
+
+/* ---------- 1. grid & lebar halaman ---------- */
+#stok-posts > .grid,
+#rental-available > .grid,
+#rental-soldout > .grid,
+#stok-soldout-list > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+@media (min-width: 700px) {
+  #app-root { max-width: 1180px; }
+  #stok-posts > .grid,
+  #rental-available > .grid,
+  #rental-soldout > .grid,
+  #stok-soldout-list > .grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 1rem; }
+  /* bagian non-grid tetap sempit di tengah supaya tidak melar di layar lebar */
+  #app-root > header, #banner-wrap, #story-highlights, #game-toggle-wrap, #tags-wrap, #sort-wrap,
+  #sg-category-wrap, #rental-games-wrap, #rental-tags-wrap, #rental-sg-wrap, #official-contact-footer {
+    max-width: 760px; margin-left: auto; margin-right: auto;
+  }
+}
+
+/* ---------- 2. bagian Sold Out di bawah ---------- */
+#stok-soldout { margin-top: 2.75rem; }
+#stok-soldout-tabs {
+  display: flex; gap: .35rem; overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+#stok-soldout-tabs::-webkit-scrollbar { display: none; }
+.sold-tab {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: .5rem;
+  padding: .65rem 1rem; border: 0; background: none; cursor: pointer;
+  font-weight: 700; font-size: 14px; line-height: 1; font-family: inherit; color: rgba(255,255,255,.55);
+  border-radius: 12px 12px 0 0; transition: color .15s, background .15s;
+}
+.sold-tab.on { color: #ddd0ff; background: rgba(124,58,237,.16); }
+.sold-tab.on::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px;
+  border-radius: 3px; background: #8b5cf6;
+}
+.sold-tab .st-dot { width: 18px; height: 18px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; }
+.sold-tab .st-dot.ff { background: linear-gradient(135deg,#a855f7,#6366f1); }
+.sold-tab .st-dot.ml { background: linear-gradient(135deg,#ec4899,#f97316); }
+.sold-tab .st-dot.all { background: rgba(255,255,255,.14); }
+.sold-tab .st-dot svg { width: 11px; height: 11px; }
+#stok-soldout-title {
+  margin: 1.6rem 0 .9rem; font-family: 'Lexend', 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800; font-size: 1.1rem; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(255,255,255,.78);
+}
+#stok-soldout-title small { font-size: .62em; letter-spacing: .08em; font-weight: 700; color: rgba(255,255,255,.4); margin-left: .5rem; }
+html.light-theme .sold-tab { color: rgba(29,21,51,.55); }
+html.light-theme .sold-tab.on { color: #5b21b6; }
+html.light-theme #stok-soldout-tabs { border-bottom-color: rgba(29,21,51,.12); }
+html.light-theme #stok-soldout-title { color: rgba(29,21,51,.8); }
+
+/* ---------- 3. badge SOLD OUT ---------- */
+/* PERF: dulu badge ini pakai backdrop-filter blur di SETIAP kartu sold out -> itu penyebab utama scroll ngelag
+   (blur dihitung ulang tiap frame di puluhan kartu). Sekarang warna merah tembus pandang biasa: tampilan
+   nyaris sama, tapi ringan di HP kentang maupun HP kencang. */
+span.sold-overlay-badge.sold-overlay-badge {
+  display: inline-flex !important; align-items: center; justify-content: center;
+  background: rgba(176,20,34,.72) !important;
+  border: 1px solid rgba(252,165,165,.45);
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  border-radius: 14px !important;
+  padding: .6rem 1rem .6rem 1.2rem !important;
+  font-family: 'Lexend', 'Baloo 2', system-ui, sans-serif !important;
+  font-weight: 800 !important; font-size: 11px !important; line-height: 1 !important;
+  letter-spacing: .26em !important; text-transform: uppercase; white-space: nowrap;
+  color: #fff !important; box-shadow: 0 3px 10px rgba(0,0,0,.35) !important;
+  animation: none !important;
+}
+span.sold-overlay-badge.sold-overlay-badge > span { display: none !important; }
+@media (min-width: 700px) { span.sold-overlay-badge.sold-overlay-badge { font-size: 12px !important; } }
+
+/* ---------- 4. sorotan ala story (ungu, bulatan kecil seperti Instagram) ---------- */
+#contact-nav-toggle-btn, #contact-nav-wrap { display: none !important; }
+#story-highlights {
+  display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  margin-top: 14px; padding: 12px 14px 10px;
+  background: #110a22; border: 1px solid rgba(139,92,246,.22); border-radius: 22px;
+}
+#story-highlights::-webkit-scrollbar { display: none; }
+#story-highlights:empty { display: none; }
+.hl {
+  flex: none; width: 58px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 0; border: 0; background: none; color: inherit; text-decoration: none; cursor: pointer;
+  font: inherit; -webkit-tap-highlight-color: transparent;
+}
+.hl-ring {
+  width: 52px; height: 52px; border-radius: 50%; padding: 2px; transition: transform .12s ease;
+  background: #8b5cf6;
+}
+.hl:active .hl-ring { transform: scale(.93); }
+.hl-in {
+  width: 100%; height: 100%; border-radius: 50%; background: #110a22; border: 2px solid #110a22;
+  display: flex; align-items: center; justify-content: center; color: #f3ecff; overflow: hidden;
+}
+.hl-in svg { width: 20px; height: 20px; }
+.hl-in img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.hl-lb {
+  max-width: 58px; font-size: 10px; line-height: 1.2; text-align: center; color: #b9a6e8;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+html.light-theme #story-highlights { background: #f4efff; border-color: rgba(109,40,217,.2); }
+html.light-theme .hl-in { background: #fff; border-color: #f4efff; color: #6d28d9; }
+html.light-theme .hl-lb { color: #5b4a8a; }
+
+/* ---------- 5. /info tanpa layar sementara ---------- */
+body.route-boot-hide #page-linkbio { background: var(--lb-boot-bg, #0f0a1a) !important; }
+
+
+/* ---------- 6. PERF: scroll mulus di HP kentang ---------- */
+/* a) kartu tidak lagi "menempel" sebagai layer GPU sendiri setelah animasi masuk selesai
+      (sebelumnya will-change + fill-mode:both membuat ratusan layer -> boros memori & scroll patah-patah) */
+.card.stock-card.anim-in, .anim-in { animation-fill-mode: backwards !important; will-change: auto !important; }
+.badge-pop { animation-fill-mode: backwards !important; }
+/* b) kartu di luar layar (baris ke-5 ke bawah) tidak ikut digambar sampai mendekati layar */
+.grid > .post-wrap:nth-child(n+9) { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+/* c) bagian Sold Out tanpa animasi masuk sama sekali (jumlahnya banyak) */
+#stok-soldout-list .anim-in, #stok-soldout-list .badge-pop, #rental-soldout .anim-in, #rental-soldout .badge-pop { animation: none !important; }
+
+/* ---------- 7. /info: tidak ada layar kosong / bulatan hitam saat refresh ---------- */
+/* isi halaman disembunyikan sampai data link siap (class lb-ready dipasang oleh 18-fixes.js) */
+#page-linkbio:not(.lb-ready) > * { visibility: hidden; }
+#page-linkbio #linkbio-avatar { opacity: 0; transition: opacity .25s ease; }
+#page-linkbio #linkbio-avatar.lb-av-ok { opacity: 1; }
+
+/* ---------- 8. logo di tab Sold Out (diupload admin) ---------- */
+.sold-tab .st-dot.has-img { background: none !important; overflow: hidden; width: 22px; height: 22px; }
+.sold-tab .st-dot.has-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+
+/* ---------- tombol "Lihat N akun sold out lainnya" (gaya sama seperti tombol di Top Up) ---------- */
+.sold-more-wrap { display: flex; justify-content: center; margin: 18px 0 4px; }
+.sold-more { padding: 11px 26px; border-radius: 999px; border: 1.5px solid rgba(167,139,250,.75); background: rgba(124,58,237,.55); color: #fff; font-weight: 700; font-size: 14px; line-height: 1.2; font-family: inherit; cursor: pointer; }
+.sold-more.ghost { background: transparent; color: #c4b0ff; }
+.sold-more:active { transform: scale(.97); }
+html.light-theme .sold-more { color: #fff; background: #7c3aed; }
+html.light-theme .sold-more.ghost { color: #6d28d9; background: transparent; }
